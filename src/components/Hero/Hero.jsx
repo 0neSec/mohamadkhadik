@@ -425,15 +425,6 @@ export default function Hero() {
                   animate="animate"
                   className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full blur-xl"
                 />
-                <span className="relative inline-block px-6 py-3 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full border border-cyan-500/30 text-cyan-300 text-lg font-medium flex items-center gap-3">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  >
-                    <FaCode />
-                  </motion.div>
-                  Fullstack Developer
-                </span>
               </motion.div>
               
               {/* Title dengan animasi karakter */}
@@ -655,36 +646,6 @@ export default function Hero() {
                     <Lanyard position={[0, 0, 15]} gravity={[0, -40, 0]} />
                   </motion.div>
                 </div>
-                
-                {/* Elemen dekoratif */}
-                <motion.div
-                  className="absolute top-4 left-4 p-2 bg-cyan-500/20 rounded-lg"
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    rotate: [0, 180, 360]
-                  }}
-                  transition={{ 
-                    duration: 5, 
-                    repeat: Infinity 
-                  }}
-                >
-                  <FaCode className="text-cyan-400" />
-                </motion.div>
-                
-                <motion.div
-                  className="absolute bottom-4 right-4 p-2 bg-purple-500/20 rounded-lg"
-                  animate={{ 
-                    scale: [1, 1.3, 1],
-                    y: [0, -10, 0]
-                  }}
-                  transition={{ 
-                    duration: 3, 
-                    repeat: Infinity,
-                    delay: 0.5
-                  }}
-                >
-                  <FaRocket className="text-purple-400" />
-                </motion.div>
               </motion.div>
             </motion.div>
           </motion.div>
