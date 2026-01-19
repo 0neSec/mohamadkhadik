@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Di file CSS global atau Tailwind config */
+@layer utilities {
+  .gooey-nav-item {
+    position: relative;
+    z-index: 10;
+  }
+  
+  .gooey-nav-container {
+    position: relative;
+    z-index: 20;
+  }
+}
