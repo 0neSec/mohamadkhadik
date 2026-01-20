@@ -25,6 +25,42 @@ import {
   FaStar,
 } from "react-icons/fa";
 
+// Fungsi untuk optimasi URL gambar Unsplash
+const optimizeUnsplashUrl = (url, width = 380, quality = 75) => {
+  try {
+    const urlObj = new URL(url);
+    const params = new URLSearchParams(urlObj.search);
+    
+    // Parameter optimasi
+    params.set('w', width.toString());
+    params.set('q', quality.toString());
+    params.set('auto', 'format');
+    params.set('fit', 'crop');
+    params.set('crop', 'entropy');
+    
+    // Hapus parameter yang tidak perlu
+    params.delete('h');
+    params.delete('dpr');
+    
+    return `${urlObj.origin}${urlObj.pathname}?${params.toString()}`;
+  } catch (error) {
+    console.error('Error optimizing URL:', error);
+    return url;
+  }
+};
+
+// Fungsi untuk generate srcSet
+const generateSrcSet = (url) => {
+  const sizes = [180, 380, 768, 1024];
+  const qualities = [70, 75, 80, 85];
+  
+  return sizes.map((size, index) => {
+    const quality = qualities[Math.min(index, qualities.length - 1)];
+    return `${optimizeUnsplashUrl(url, size, quality)} ${size}w`;
+  }).join(', ');
+};
+
+// Generate gambar yang sudah dioptimasi
 const portfolioItems = [
   { 
     id: 1,
@@ -38,6 +74,10 @@ const portfolioItems = [
     gradient: "from-emerald-600 to-teal-600",
     isPWA: false,
     image: "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+    imageOptimized: {
+      src: optimizeUnsplashUrl("https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80", 380, 75),
+      srcSet: generateSrcSet("https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80")
+    },
     features: [
       "News & Articles CMS",
       "Photo & Video Gallery",
@@ -61,6 +101,10 @@ const portfolioItems = [
     gradient: "from-blue-600 to-cyan-600",
     isPWA: false,
     image: "https://images.unsplash.com/photo-1535223289827-42f1e9919769?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+    imageOptimized: {
+      src: optimizeUnsplashUrl("https://images.unsplash.com/photo-1535223289827-42f1e9919769?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80", 380, 75),
+      srcSet: generateSrcSet("https://images.unsplash.com/photo-1535223289827-42f1e9919769?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80")
+    },
     features: [
       "Single Page Application",
       "Interactive Animations",
@@ -84,6 +128,10 @@ const portfolioItems = [
     gradient: "from-indigo-600 to-purple-600",
     isPWA: false,
     image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+    imageOptimized: {
+      src: optimizeUnsplashUrl("https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80", 380, 75),
+      srcSet: generateSrcSet("https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80")
+    },
     features: [
       "Authentication System",
       "Real-time Database",
@@ -107,6 +155,10 @@ const portfolioItems = [
     gradient: "from-green-600 to-emerald-600",
     isPWA: false,
     image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+    imageOptimized: {
+      src: optimizeUnsplashUrl("https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80", 380, 75),
+      srcSet: generateSrcSet("https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80")
+    },
     lighthouseScore: { performance: 92, pwa: 100, accessibility: 96 },
     features: [
       "AI Plant Detection",
@@ -131,6 +183,10 @@ const portfolioItems = [
     gradient: "from-teal-600 to-cyan-600",
     isPWA: false,
     image: "https://images.unsplash.com/photo-1585621386289-2c0d5d44b0b0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+    imageOptimized: {
+      src: optimizeUnsplashUrl("https://images.unsplash.com/photo-1585621386289-2c0d5d44b0b0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80", 380, 75),
+      srcSet: generateSrcSet("https://images.unsplash.com/photo-1585621386289-2c0d5d44b0b0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80")
+    },
     lighthouseScore: { performance: 94, pwa: 100, accessibility: 95 },
     features: [
       "AI Herbal Detection",
@@ -155,6 +211,10 @@ const portfolioItems = [
     gradient: "from-orange-600 to-red-600",
     isPWA: false,
     image: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+    imageOptimized: {
+      src: optimizeUnsplashUrl("https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80", 380, 75),
+      srcSet: generateSrcSet("https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80")
+    },
     features: [
       "Multi-role Dashboard",
       "Payment Integration",
@@ -308,6 +368,90 @@ const waveVariants = {
   }
 };
 
+// Komponen OptimizedImage dengan lazy loading dan placeholder
+const OptimizedImage = ({ 
+  src, 
+  srcSet, 
+  alt, 
+  className, 
+  onClick,
+  variants,
+  initial,
+  whileInView,
+  whileHover
+}) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    // Preload gambar
+    const img = new Image();
+    img.src = src;
+    if (srcSet) {
+      img.srcset = srcSet;
+    }
+    img.onload = () => setLoaded(true);
+    img.onerror = () => setError(true);
+    
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [src, srcSet]);
+
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      {/* Placeholder shimmer effect */}
+      {!loaded && !error && (
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800"
+          animate={{
+            backgroundPosition: ['200% 0', '-200% 0'],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          style={{
+            backgroundSize: '200% 100%',
+            backgroundImage: 'linear-gradient(90deg, #1f2937 0%, #374151 50%, #1f2937 100%)'
+          }}
+        />
+      )}
+      
+      {/* Error fallback */}
+      {error && (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+          <FaImage className="text-gray-600 text-3xl" />
+        </div>
+      )}
+      
+      {/* Gambar utama */}
+      <motion.img
+        variants={variants}
+        initial={initial}
+        whileInView={whileInView}
+        whileHover={whileHover}
+        src={loaded ? src : ''}
+        srcSet={loaded ? srcSet : ''}
+        alt={alt}
+        className={`
+          ${className}
+          ${loaded ? 'opacity-100' : 'opacity-0'}
+          transition-opacity duration-500
+        `}
+        onClick={onClick}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        onError={() => setError(true)}
+      />
+    </div>
+  );
+};
+
 export default function Portfolio() {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [activeCategory, setActiveCategory] = useState("All");
@@ -373,7 +517,7 @@ export default function Portfolio() {
   };
 
   const openImageModal = (imageUrl, index) => {
-    setActiveImage(imageUrl);
+    setActiveImage(optimizeUnsplashUrl(imageUrl, 1024, 85));
     setImageGalleryIndex(index);
   };
 
@@ -383,7 +527,7 @@ export default function Portfolio() {
 
   const navigateGallery = (direction) => {
     const currentIndex = portfolioItems.findIndex(item => 
-      item.image === activeImage
+      optimizeUnsplashUrl(item.image, 1024, 85) === activeImage
     );
     let newIndex;
     
@@ -393,7 +537,7 @@ export default function Portfolio() {
       newIndex = (currentIndex - 1 + portfolioItems.length) % portfolioItems.length;
     }
     
-    setActiveImage(portfolioItems[newIndex].image);
+    setActiveImage(optimizeUnsplashUrl(portfolioItems[newIndex].image, 1024, 85));
     setImageGalleryIndex(newIndex);
   };
 
@@ -759,15 +903,16 @@ export default function Portfolio() {
 
                 {/* Project Image with Hover Effect */}
                 <div className="relative h-56 overflow-hidden">
-                  <motion.img
+                  <OptimizedImage
+                    src={project.imageOptimized.src}
+                    srcSet={project.imageOptimized.srcSet}
+                    alt={project.name}
+                    className="w-full h-full object-cover cursor-pointer"
+                    onClick={() => openImageModal(project.image, index)}
                     variants={imageVariants}
                     initial="hidden"
                     whileInView="visible"
                     whileHover="hover"
-                    src={project.image}
-                    alt={project.name}
-                    className="w-full h-full object-cover cursor-pointer"
-                    onClick={() => openImageModal(project.image, index)}
                   />
                   
                   {/* Image overlay gradient */}
@@ -1037,6 +1182,7 @@ export default function Portfolio() {
                   initial={{ filter: "blur(20px)" }}
                   animate={{ filter: "blur(0px)" }}
                   transition={{ duration: 0.5 }}
+                  loading="eager"
                 />
                 
                 {/* Loading indicator */}
