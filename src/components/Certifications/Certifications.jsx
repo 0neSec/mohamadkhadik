@@ -1,5 +1,5 @@
 // components/Certifications/Certifications.jsx
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { 
   FaCertificate, 
@@ -19,6 +19,7 @@ import {
   FaChevronDown
 } from "react-icons/fa";
 
+// Static data - moved outside component to prevent re-creation on every render
 const certifications = [
   { 
     title: "ID Camp learning path React Developer (Dicoding)", 
@@ -97,15 +98,15 @@ const achievements = [
   }
 ];
 
-// Variants for scroll animations
+// Static variants - memoize or keep static
 const scrollContainerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.2,
-      duration: 0.8
+      staggerChildren: 0.1, // Reduced from 0.15
+      delayChildren: 0.1, // Reduced from 0.2
+      duration: 0.5 // Reduced from 0.8
     }
   }
 };
@@ -113,8 +114,8 @@ const scrollContainerVariants = {
 const scrollItemVariants = {
   hidden: { 
     opacity: 0, 
-    y: 40,
-    scale: 0.95
+    y: 20, // Reduced from 40
+    scale: 0.98 // Reduced from 0.95
   },
   visible: {
     opacity: 1,
@@ -122,228 +123,209 @@ const scrollItemVariants = {
     scale: 1,
     transition: {
       type: "spring",
-      stiffness: 100,
-      damping: 15,
-      mass: 0.8
-    }
-  },
-  hover: {
-    y: -8,
-    scale: 1.02,
-    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 25
+      stiffness: 120, // Increased from 100
+      damping: 20, // Increased from 15
+      mass: 0.5 // Reduced from 0.8
     }
   }
 };
 
 const fadeInUpVariants = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 20 }, // Reduced from 30
   visible: { 
     opacity: 1, 
     y: 0,
     transition: {
-      duration: 0.6,
+      duration: 0.4, // Reduced from 0.6
       ease: "easeOut"
     }
   }
 };
 
-const scaleInVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: { 
-    opacity: 1, 
-    scale: 1,
-    transition: {
-      duration: 0.5,
-      ease: "backOut"
-    }
-  }
-};
-
+// Simplified variants to reduce JS execution
 const slideInLeftVariants = {
-  hidden: { opacity: 0, x: -50 },
+  hidden: { opacity: 0, x: -30 }, // Reduced from -50
   visible: { 
     opacity: 1, 
     x: 0,
     transition: {
-      duration: 0.7,
+      duration: 0.5, // Reduced from 0.7
       ease: "easeOut"
     }
   }
 };
 
 const slideInRightVariants = {
-  hidden: { opacity: 0, x: 50 },
+  hidden: { opacity: 0, x: 30 }, // Reduced from 50
   visible: { 
     opacity: 1, 
     x: 0,
     transition: {
-      duration: 0.7,
+      duration: 0.5, // Reduced from 0.7
       ease: "easeOut"
     }
   }
 };
 
-const floatVariants = {
-  initial: { y: 0 },
-  float: {
-    y: [0, -10, 0],
-    transition: {
-      duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }
-  }
-};
+// Memoized particle component to prevent unnecessary re-renders
+const Particle = React.memo(({ id, scrollOpacity }) => {
+  const xPos = useMemo(() => Math.random() * 100, []);
+  const yPos = useMemo(() => Math.random() * 100, []);
+  const duration = useMemo(() => 4 + Math.random() * 2, []); // Reduced from 8-12
+  
+  return (
+    <motion.div
+      className="absolute w-1 h-1 bg-gradient-to-r from-cyan-500/30 to-purple-500/30 rounded-full"
+      initial={{ 
+        x: `${xPos}%`, 
+        y: `${yPos}%`,
+        opacity: 0 
+      }}
+      animate={{ 
+        y: [null, -20, 5, -20], // Reduced motion
+        x: [null, 5, -5, 5],
+        opacity: [0, 0.3, 0.1, 0], // Reduced opacity
+        scale: [0.5, 0.8, 0.6, 0.5]
+      }}
+      transition={{
+        duration,
+        repeat: Infinity,
+        delay: id * 0.2, // Reduced from 0.3
+        ease: "linear" // Changed from easeInOut
+      }}
+      style={{ opacity: scrollOpacity }}
+    />
+  );
+});
 
-const glowPulseVariants = {
-  initial: { opacity: 0.3 },
-  pulse: {
-    opacity: [0.3, 0.6, 0.3],
-    scale: [1, 1.05, 1],
-    transition: {
-      duration: 2.5,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }
-  }
-};
+Particle.displayName = 'Particle';
 
 export default function Certifications() {
   const sectionRef = useRef(null);
   const certificationsRef = useRef(null);
   const achievementsRef = useRef(null);
+  const [isClient, setIsClient] = useState(false);
   
-  // Scroll progress for parallax effects
+  // Use once: true to trigger animations only once
+  const isCertificationsInView = useInView(certificationsRef, { once: true, amount: 0.3 });
+  const isAchievementsInView = useInView(achievementsRef, { once: true, amount: 0.3 });
+  const isHeaderInView = useInView(sectionRef, { once: true, amount: 0.2 });
+  
+  // Simplified scroll progress - removed complex scroll listener
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end end"]
   });
   
-  // Parallax values
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-  const particlesOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.2, 0.8, 0.2]);
+  // Memoized transform values
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "10%"]); // Reduced from 20%
+  const particlesOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.1, 0.3, 0.1]); // Reduced opacity
   
-  // Check if elements are in view
-  const isCertificationsInView = useInView(certificationsRef, { once: false, amount: 0.3 });
-  const isAchievementsInView = useInView(achievementsRef, { once: false, amount: 0.3 });
-  const isHeaderInView = useInView(sectionRef, { once: false, amount: 0.2 });
-  
-  // Interactive scroll indicator
+  // Memoize particles array
+  const particles = useMemo(() => 
+    Array.from({ length: 10 }, (_, i) => ( // Reduced from 20 to 10
+      <Particle key={i} id={i} scrollOpacity={particlesOpacity} />
+    )),
+    []
+  );
+
+  // Memoize stats to prevent re-calculation
+  const certificationStats = useMemo(() => [
+    { value: certifications.length, label: "Total Certifications", gradient: "from-blue-500/20 to-cyan-500/20", border: "border-blue-500/20" },
+    { value: 3, label: "Professional Level", gradient: "from-purple-500/20 to-pink-500/20", border: "border-purple-500/20" },
+    { value: 2, label: "Advanced Level", gradient: "from-green-500/20 to-emerald-500/20", border: "border-green-500/20" }
+  ], []);
+
+  const achievementStats = useMemo(() => [
+    { label: "1st Place Wins", value: 2 },
+    { label: "Competitors Faced", value: "200+" }
+  ], []);
+
+  // Memoize achievement rank labels
+  const getRankLabel = useCallback((rank) => {
+    switch(rank) {
+      case 1: return "🏆 Champion";
+      case 2: return "🥈 Runner-up";
+      default: return "🥉 Third Place";
+    }
+  }, []);
+
+  // Memoize achievement rank styles
+  const getRankStyles = useCallback((rank) => {
+    if (rank === 1) {
+      return "bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-300 border border-yellow-500/30";
+    } else if (rank === 2) {
+      return "bg-gradient-to-r from-gray-400/20 to-gray-500/20 text-gray-300 border border-gray-500/30";
+    }
+    return "bg-gradient-to-r from-amber-700/20 to-orange-700/20 text-amber-300 border border-amber-700/30";
+  }, []);
+
+  // Set client-side flag for animations that need window
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollIndicator = document.getElementById('scroll-indicator');
-      if (scrollIndicator) {
-        const scrollPercentage = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
-        scrollIndicator.style.width = `${scrollPercentage}%`;
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    setIsClient(true);
   }, []);
 
   return (
     <section 
       ref={sectionRef}
-      className="relative py-20 px-4 sm:px-6 lg:px-8 bg-black from-gray-900/30 via-black to-gray-900/30 overflow-hidden"
+      className="relative sm:px-6 lg:px-8 bg-black from-gray-900/30 via-black to-gray-900/30 overflow-hidden"
       id="certifications"
+      style={{ contain: 'layout paint' }} // CSS containment for performance
     >
-      {/* Scroll Progress Indicator */}
-      <div className="fixed top-0 left-0 w-full h-1 z-50 bg-gray-800">
+      {/* Simplified scroll indicator - removed fixed position to reduce compositing */}
+      <div className="sticky top-0 left-0 w-full h-1 z-40 bg-gray-800">
         <motion.div 
-          id="scroll-indicator"
           className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500"
-          initial={{ width: "0%" }}
-          animate={{ width: "100%" }}
-          transition={{ duration: 0.3 }}
+          style={{ scaleX: scrollYProgress }}
         />
       </div>
       
-      {/* Background with parallax */}
+      {/* Simplified background */}
       <motion.div 
-        className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-black to-purple-900/20"
+        className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/10 via-black to-purple-900/10"
         style={{ y: backgroundY }}
       />
       
-      {/* Animated grid background */}
-      <motion.div 
-        className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_70%)]"
-        animate={{ 
-          backgroundPosition: ["0px 0px", "0px 3rem", "3rem 3rem", "3rem 0px", "0px 0px"]
-        }}
-        transition={{ 
-          duration: 20, 
-          repeat: Infinity, 
-          ease: "linear" 
-        }}
-      />
+      {/* Static grid background - removed animation */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_70%)]" />
       
-      {/* Floating particles with scroll interaction */}
+      {/* Reduced number of particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-gradient-to-r from-cyan-500/30 to-purple-500/30 rounded-full"
-            initial={{ 
-              x: Math.random() * 100 + "%", 
-              y: Math.random() * 100 + "%",
-              opacity: 0 
-            }}
-            animate={{ 
-              y: [null, -30, 10, -30],
-              x: [null, Math.random() * 20 - 10, Math.random() * 20 - 10],
-              opacity: [0, 0.5, 0.2, 0],
-              scale: [0.5, 1, 0.8, 0.5]
-            }}
-            transition={{
-              duration: 8 + Math.random() * 4,
-              repeat: Infinity,
-              delay: i * 0.3,
-              ease: "easeInOut"
-            }}
-            style={{ opacity: particlesOpacity }}
-          />
-        ))}
+        {isClient && particles}
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Header with scroll-triggered animation */}
+        {/* Header with reduced animations */}
         <motion.div
           initial="hidden"
           animate={isHeaderInView ? "visible" : "hidden"}
           variants={fadeInUpVariants}
-          className="text-center mb-20"
+          className="text-center mb-16" // Reduced from mb-20
         >
-          
-          
-          <h2 className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent bg-size-200 animate-gradient">
+          <h2 className="text-4xl md:text-6xl font-bold mb-6"> {/* Reduced sizes */}
+            <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Certifications & Achievements
             </span>
           </h2>
           
           <motion.div 
             initial={{ width: 0, opacity: 0 }}
-            animate={isHeaderInView ? { width: 200, opacity: 1 } : {}}
-            transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
-            className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500 mx-auto rounded-full mb-8"
+            animate={isHeaderInView ? { width: 150, opacity: 1 } : {}} // Reduced width
+            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }} // Reduced duration
+            className="h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500 mx-auto rounded-full mb-6" // Reduced mb
           />
           
           <motion.p 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }} // Reduced y
             animate={isHeaderInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.7 }}
-            className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed"
+            transition={{ duration: 0.5, delay: 0.5 }} // Reduced delay
+            className="text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed" // Reduced text size
           >
             Professional certifications and notable achievements demonstrating expertise and excellence in technology
           </motion.p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid lg:grid-cols-2 gap-10"> {/* Reduced gap */}
           {/* Certifications Section */}
           <motion.div
             ref={certificationsRef}
@@ -352,102 +334,56 @@ export default function Certifications() {
             variants={scrollContainerVariants}
             className="relative"
           >
-            {/* Section Header with slide-in */}
             <motion.div
               variants={slideInLeftVariants}
-              className="flex items-center gap-4 mb-10"
+              className="flex items-center gap-4 mb-8" // Reduced mb
             >
-              <motion.div
-                whileHover={{ rotate: 15, scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative"
-              >
-                <motion.div
-                  variants={glowPulseVariants}
-                  initial="initial"
-                  animate="pulse"
-                  className="absolute -inset-3 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full blur"
-                />
-                <div className="relative p-4 bg-gradient-to-br from-cyan-600 to-blue-700 rounded-2xl">
-                  <FaCertificate className="text-2xl text-white" />
-                </div>
-              </motion.div>
+              <div className="relative p-3 bg-gradient-to-br from-cyan-600 to-blue-700 rounded-xl"> {/* Reduced padding */}
+                <FaCertificate className="text-xl text-white" /> {/* Reduced size */}
+              </div>
               <div>
-                <h3 className="text-3xl font-bold text-white">Certifications</h3>
-                <p className="text-gray-400">Professional credentials and qualifications</p>
+                <h3 className="text-2xl font-bold text-white">Certifications</h3> {/* Reduced size */}
+                <p className="text-gray-400 text-sm">Professional credentials</p> {/* Reduced text */}
               </div>
             </motion.div>
 
-            {/* Certifications List with staggered entrance */}
-            <div className="space-y-6">
+            {/* Simplified certifications list */}
+            <div className="space-y-4"> {/* Reduced spacing */}
               {certifications.map((cert, index) => (
                 <motion.div
                   key={index}
                   custom={index}
                   variants={scrollItemVariants}
-                  whileHover="hover"
-                  whileTap={{ scale: 0.98 }}
-                  className="relative group"
+                  className="relative bg-gray-900/60 backdrop-blur-sm rounded-lg p-5 border border-gray-800 transition-colors hover:border-cyan-500/50" // Reduced padding, simplified hover
                 >
-                  {/* Entry animation line */}
-                  <motion.div 
-                    className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500/0 via-cyan-500 to-purple-500/0"
-                    initial={{ scaleY: 0, originY: 0 }}
-                    animate={isCertificationsInView ? { scaleY: 1 } : {}}
-                    transition={{ duration: 0.8, delay: cert.delay }}
-                  />
-                  
-                  {/* Card */}
-                  <div className="relative bg-gray-900/60 backdrop-blur-sm rounded-xl p-6 border border-gray-800 group-hover:border-cyan-500/50 transition-all duration-300 overflow-hidden">
-                    {/* Animated background effect */}
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-purple-500/5"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: "100%" }}
-                      transition={{ duration: 0.6 }}
-                    />
+                  <div className="flex items-start gap-4"> {/* Reduced gap */}
+                    <div className={`p-3 rounded-lg bg-gradient-to-br ${cert.gradient} bg-opacity-20 flex-shrink-0`}> {/* Reduced padding */}
+                      <div className="text-lg"> {/* Reduced size */}
+                        {cert.icon}
+                      </div>
+                    </div>
                     
-                    <div className="relative z-10 flex items-start gap-5">
-                      {/* Icon with animation */}
-                      <motion.div 
-                        className={`p-4 rounded-xl bg-gradient-to-br ${cert.gradient} bg-opacity-20`}
-                        whileHover={{ rotate: 360 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <div className="text-xl">
-                          {cert.icon}
-                        </div>
-                      </motion.div>
+                    <div className="flex-1 min-w-0"> {/* Added min-w-0 for text truncation */}
+                      <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
+                        <h4 className="font-bold text-white text-base leading-tight flex-1 min-w-0"> {/* Reduced size */}
+                          {cert.title}
+                        </h4>
+                        <span className="text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-300 flex-shrink-0">
+                          {cert.year}
+                        </span>
+                      </div>
                       
-                      {/* Content */}
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-3">
-                          <h4 className="font-bold text-white text-lg group-hover:text-cyan-300 transition-colors">
-                            {cert.title}
-                          </h4>
-                          <motion.span 
-                            className="text-xs px-3 py-1 rounded-full bg-gray-800 text-gray-300"
-                            whileHover={{ scale: 1.1 }}
-                          >
-                            {cert.year}
-                          </motion.span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <p className="text-gray-400">{cert.issuer}</p>
-                          <motion.span 
-                            className={`text-xs px-3 py-1 rounded-full ${
-                              cert.level === "Professional" 
-                                ? "bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30"
-                                : cert.level === "Advanced"
-                                ? "bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                                : "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30"
-                            }`}
-                            whileHover={{ y: -2 }}
-                          >
-                            {cert.level}
-                          </motion.span>
-                        </div>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <p className="text-gray-400 text-sm">{cert.issuer}</p> {/* Reduced size */}
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          cert.level === "Professional" 
+                            ? "bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30"
+                            : cert.level === "Advanced"
+                            ? "bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                            : "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30"
+                        }`}>
+                          {cert.level}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -455,38 +391,22 @@ export default function Certifications() {
               ))}
             </div>
 
-            {/* Stats with scroll animation */}
+            {/* Simplified stats */}
             <motion.div
               initial="hidden"
               animate={isCertificationsInView ? "visible" : "hidden"}
               variants={scrollContainerVariants}
-              className="mt-12 grid grid-cols-3 gap-5"
+              className="mt-8 grid grid-cols-3 gap-3" // Reduced mt and gap
             >
-              {[
-                { value: certifications.length, label: "Total Certifications", gradient: "from-blue-500/20 to-cyan-500/20", border: "border-blue-500/20" },
-                { value: 3, label: "Professional Level", gradient: "from-purple-500/20 to-pink-500/20", border: "border-purple-500/20" },
-                { value: 2, label: "Advanced Level", gradient: "from-green-500/20 to-emerald-500/20", border: "border-green-500/20" }
-              ].map((stat, index) => (
+              {certificationStats.map((stat, index) => (
                 <motion.div
                   key={index}
                   variants={scrollItemVariants}
                   custom={index}
-                  className={`text-center p-5 rounded-xl border backdrop-blur-sm ${stat.border} bg-gradient-to-b ${stat.gradient}`}
+                  className={`text-center p-3 rounded-lg border backdrop-blur-sm ${stat.border} bg-gradient-to-b ${stat.gradient}`} // Reduced padding
                 >
-                  <motion.div 
-                    className="text-3xl font-bold text-white mb-2"
-                    initial={{ scale: 0 }}
-                    animate={isCertificationsInView ? { scale: 1 } : {}}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 200, 
-                      damping: 15,
-                      delay: 0.8 + index * 0.1 
-                    }}
-                  >
-                    {stat.value}
-                  </motion.div>
-                  <div className="text-sm text-gray-300">{stat.label}</div>
+                  <div className="text-xl font-bold text-white mb-1">{stat.value}</div> {/* Reduced size */}
+                  <div className="text-xs text-gray-300 leading-tight">{stat.label}</div> {/* Reduced size */}
                 </motion.div>
               ))}
             </motion.div>
@@ -500,247 +420,104 @@ export default function Certifications() {
             variants={scrollContainerVariants}
             className="relative"
           >
-            {/* Section Header with slide-in */}
             <motion.div
               variants={slideInRightVariants}
-              className="flex items-center gap-4 mb-10"
+              className="flex items-center gap-4 mb-8" // Reduced mb
             >
-              <motion.div
-                whileHover={{ rotate: -15, scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative"
-              >
-                <motion.div
-                  variants={glowPulseVariants}
-                  initial="initial"
-                  animate="pulse"
-                  className="absolute -inset-3 bg-gradient-to-r from-amber-500/30 to-orange-500/30 rounded-full blur"
-                />
-                <div className="relative p-4 bg-gradient-to-br from-amber-600 to-orange-700 rounded-2xl">
-                  <FaTrophy className="text-2xl text-white" />
-                </div>
-              </motion.div>
+              <div className="relative p-3 bg-gradient-to-br from-amber-600 to-orange-700 rounded-xl"> {/* Reduced padding */}
+                <FaTrophy className="text-xl text-white" /> {/* Reduced size */}
+              </div>
               <div>
-                <h3 className="text-3xl font-bold text-white">Achievements</h3>
-                <p className="text-gray-400">Notable accomplishments and awards</p>
+                <h3 className="text-2xl font-bold text-white">Achievements</h3> {/* Reduced size */}
+                <p className="text-gray-400 text-sm">Notable accomplishments</p> {/* Reduced text */}
               </div>
             </motion.div>
 
-            {/* Achievements List with staggered entrance */}
-            <div className="space-y-8">
+            {/* Simplified achievements list */}
+            <div className="space-y-6"> {/* Reduced spacing */}
               {achievements.map((achievement, index) => (
                 <motion.div
                   key={index}
                   custom={index}
                   variants={scrollItemVariants}
-                  whileHover="hover"
-                  whileTap={{ scale: 0.98 }}
-                  className="relative group"
+                  className="relative bg-gradient-to-br from-gray-900/80 to-black/80 backdrop-blur-sm rounded-lg p-5 border border-gray-800" // Reduced padding
                 >
-                  {/* Floating rank badge */}
-                  <motion.div
-                    className="absolute -top-5 -left-5 z-20"
-                    animate={{ 
-                      y: [0, -10, 0],
-                      rotate: [0, 5, -5, 0]
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      delay: index * 0.5
-                    }}
-                  >
-                    <div className="relative">
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-yellow-500/50 to-amber-500/50 rounded-full blur"
-                        animate={{ 
-                          scale: [1, 1.2, 1],
-                          opacity: [0.5, 0.8, 0.5]
-                        }}
-                        transition={{ 
-                          duration: 2, 
-                          repeat: Infinity,
-                          delay: index * 0.3 
-                        }}
-                      />
-                      <div className={`relative w-14 h-14 rounded-full flex items-center justify-center bg-gradient-to-br ${achievement.gradient} shadow-lg`}>
-                        <FaStar className="text-white text-lg" />
-                        <span className="absolute text-sm font-bold text-white">
-                          {achievement.rank}
-                          {achievement.rank === 1 ? "st" : achievement.rank === 2 ? "nd" : "rd"}
-                        </span>
+                  <div className="relative z-10">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
+                      <div className={`p-3 rounded-lg bg-gradient-to-br ${achievement.gradient} bg-opacity-20 flex-shrink-0`}> {/* Reduced padding */}
+                        {achievement.icon}
                       </div>
-                    </div>
-                  </motion.div>
-
-                  {/* Achievement Card */}
-                  <div className={`
-                    relative bg-gradient-to-br from-gray-900/80 to-black/80
-                    backdrop-blur-sm rounded-xl p-7 border border-gray-800
-                    transition-all duration-300 overflow-hidden
-                    group-hover:border-gray-600 group-hover:shadow-2xl
-                    ${achievement.rank === 1 ? "shadow-lg shadow-yellow-500/10" : ""}
-                  `}>
-                    {/* Animated gradient overlay */}
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-purple-500/5 to-cyan-500/0"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: "100%" }}
-                      transition={{ duration: 0.8 }}
-                    />
-                    
-                    {/* Animated background pattern */}
-                    <div className="absolute inset-0 opacity-[0.03]">
-                      <motion.div 
-                        className="absolute inset-0"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
-                          backgroundSize: '60px 60px'
-                        }}
-                        animate={{ 
-                          backgroundPosition: ["0px 0px", "60px 60px"] 
-                        }}
-                        transition={{ 
-                          duration: 20, 
-                          repeat: Infinity, 
-                          ease: "linear" 
-                        }}
-                      />
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getRankStyles(achievement.rank)}`}> {/* Reduced padding */}
+                        {getRankLabel(achievement.rank)}
+                      </span>
                     </div>
 
-                    <div className="relative z-10">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-5">
-                        <motion.div 
-                          className={`p-4 rounded-xl bg-gradient-to-br ${achievement.gradient} bg-opacity-20`}
-                          whileHover={{ scale: 1.1, rotate: 5 }}
-                        >
-                          {achievement.icon}
-                        </motion.div>
-                        <motion.span 
-                          className={`px-4 py-2 rounded-full text-sm font-bold ${
-                            achievement.rank === 1 
-                              ? "bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-300 border border-yellow-500/30"
-                              : achievement.rank === 2
-                              ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 text-gray-300 border border-gray-500/30"
-                              : "bg-gradient-to-r from-amber-700/20 to-orange-700/20 text-amber-300 border border-amber-700/30"
-                          }`}
-                          whileHover={{ scale: 1.05, y: -2 }}
-                        >
-                          {achievement.rank === 1 ? "🏆 Champion" : achievement.rank === 2 ? "🥈 Runner-up" : "🥉 Third Place"}
-                        </motion.span>
-                      </div>
+                    {/* Title & Description */}
+                    <h4 className="text-lg font-bold text-white mb-2 leading-tight"> {/* Reduced size */}
+                      {achievement.title}
+                    </h4>
+                    <p className="text-gray-400 text-sm mb-4 leading-relaxed"> {/* Reduced size */}
+                      {achievement.description}
+                    </p>
 
-                      {/* Title & Description */}
-                      <motion.h4 
-                        className="text-xl font-bold text-white mb-3 group-hover:text-amber-300 transition-colors"
-                        whileHover={{ x: 5 }}
-                      >
-                        {achievement.title}
-                      </motion.h4>
-                      <p className="text-gray-400 mb-6 leading-relaxed">
-                        {achievement.description}
-                      </p>
-
-                      {/* Features */}
-                      <div className="mb-6">
-                        <div className="text-sm text-gray-500 mb-3">Key Highlights</div>
-                        <div className="flex flex-wrap gap-3">
-                          {achievement.features.map((feature, idx) => (
-                            <motion.span 
-                              key={idx} 
-                              className="px-4 py-2 rounded-full text-sm bg-gray-800/60 text-gray-300 border border-gray-700/50"
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={isAchievementsInView ? { opacity: 1, scale: 1 } : {}}
-                              transition={{ delay: achievement.delay + idx * 0.1 }}
-                              whileHover={{ 
-                                scale: 1.1, 
-                                backgroundColor: "rgba(59, 130, 246, 0.1)",
-                                borderColor: "rgba(59, 130, 246, 0.5)"
-                              }}
-                            >
-                              {feature}
-                            </motion.span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Year */}
-                      <div className="flex items-center justify-between pt-5 border-t border-gray-800">
-                        <div className="flex items-center gap-3">
-                          <motion.div
-                            animate={{ 
-                              scale: [1, 1.2, 1],
-                              rotate: [0, 10, -10, 0]
-                            }}
-                            transition={{ 
-                              duration: 2, 
-                              repeat: Infinity,
-                              delay: index * 0.5 
-                            }}
+                    {/* Features */}
+                    <div className="mb-4">
+                      <div className="flex flex-wrap gap-2">
+                        {achievement.features.map((feature, idx) => (
+                          <span 
+                            key={idx} 
+                            className="px-3 py-1 rounded-full text-xs bg-gray-800/60 text-gray-300 border border-gray-700/50" // Reduced padding
                           >
-                            <FaFire className="text-amber-500 text-lg" />
-                          </motion.div>
-                          <span className="text-sm text-gray-400">Achievement Year</span>
-                        </div>
-                        <span className="text-base font-medium text-white bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-                          {achievement.title.includes("2024") ? "2024" : "2022"}
-                        </span>
+                            {feature}
+                          </span>
+                        ))}
                       </div>
+                    </div>
+
+                    {/* Year */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-800">
+                      <div className="flex items-center gap-2">
+                        <FaFire className="text-amber-500 text-base" /> {/* Reduced size */}
+                        <span className="text-sm text-gray-400">Achievement Year</span>
+                      </div>
+                      <span className="text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+                        {achievement.title.includes("2024") ? "2024" : "2022"}
+                      </span>
                     </div>
                   </div>
                 </motion.div>
               ))}
             </div>
 
-            {/* Summary Stats */}
+            {/* Simplified summary */}
             <motion.div
               initial="hidden"
               animate={isAchievementsInView ? "visible" : "hidden"}
               variants={fadeInUpVariants}
-              transition={{ delay: 0.8 }}
-              className="mt-12"
+              transition={{ delay: 0.5 }} // Reduced delay
+              className="mt-8" // Reduced mt
             >
-              <div className="bg-gradient-to-r from-gray-900/60 to-black/60 backdrop-blur-sm rounded-xl p-7 border border-gray-800 overflow-hidden">
-                {/* Animated background */}
-                <motion.div 
-                  className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-amber-500/5"
-                  initial={{ x: "-100%" }}
-                  whileInView={{ x: "100%" }}
-                  transition={{ duration: 1.5, delay: 0.5 }}
-                  viewport={{ once: true }}
-                />
-                
-                <div className="relative z-10">
-                  <div className="flex items-center gap-5 mb-6">
-                    <motion.div 
-                      className="p-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-xl"
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.6 }}
+              <div className="bg-gradient-to-r from-gray-900/60 to-black/60 backdrop-blur-sm rounded-lg p-5 border border-gray-800"> {/* Reduced padding */}
+                <div className="flex items-center gap-4 mb-4"> {/* Reduced gap */}
+                  <div className="p-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-lg flex-shrink-0"> {/* Reduced padding */}
+                    <FaAward className="text-xl text-amber-400" /> {/* Reduced size */}
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-white">Competition Summary</h4> {/* Reduced size */}
+                    <p className="text-gray-400 text-sm">National & Corporate Level</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3"> {/* Reduced gap */}
+                  {achievementStats.map((stat, idx) => (
+                    <div 
+                      key={idx}
+                      className="text-center p-3 bg-gray-900/40 rounded-lg border border-gray-800" // Reduced padding
                     >
-                      <FaAward className="text-2xl text-amber-400" />
-                    </motion.div>
-                    <div>
-                      <h4 className="text-xl font-bold text-white">Competition Summary</h4>
-                      <p className="text-gray-400">National & Corporate Level</p>
+                      <div className="text-xl font-bold text-amber-400 mb-1">{stat.value}</div> {/* Reduced size */}
+                      <div className="text-xs text-gray-300">{stat.label}</div>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-5">
-                    <motion.div 
-                      className="text-center p-5 bg-gray-900/40 rounded-xl border border-gray-800"
-                      whileHover={{ y: -5, scale: 1.02 }}
-                    >
-                      <div className="text-3xl font-bold text-amber-400 mb-2">2</div>
-                      <div className="text-sm text-gray-300">1st Place Wins</div>
-                    </motion.div>
-                    <motion.div 
-                      className="text-center p-5 bg-gray-900/40 rounded-xl border border-gray-800"
-                      whileHover={{ y: -5, scale: 1.02 }}
-                    >
-                      <div className="text-3xl font-bold text-amber-400 mb-2">200+</div>
-                      <div className="text-sm text-gray-300">Competitors Faced</div>
-                    </motion.div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </motion.div>

@@ -1192,7 +1192,6 @@ export default function Portfolio() {
                   animate={{ opacity: 0 }}
                   transition={{ delay: 0.5 }}
                 >
-                  <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
                 </motion.div>
               </motion.div>
             </motion.div>
