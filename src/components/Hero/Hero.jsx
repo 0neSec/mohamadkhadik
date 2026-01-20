@@ -327,7 +327,7 @@ export default function Hero() {
 
   // Nama yang akan ditampilkan
   const fullName = "Mohamad Khadik";
-  const titleText = "React.js & Laravel Expert";
+  const titleText = "Fullstack Developer";
 
   return (
     <section
@@ -469,7 +469,7 @@ export default function Hero() {
                     variants={textRevealVariants}
                     custom={1}
                   >
-                    <span className="inline-flex items-center gap-3 flex-wrap">
+                    <span className="inline-flex items-center gap-2 flex-wrap">
                       <FaRocket className="text-cyan-400 shrink-0" />
                       {/* Judul: React.js & Laravel Expert */}
                       {renderAnimatedText(titleText)}
