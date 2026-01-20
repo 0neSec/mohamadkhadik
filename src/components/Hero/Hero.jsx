@@ -336,13 +336,11 @@ export default function Hero() {
       className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-900 min-h-screen flex flex-col justify-center"
       style={{ position: 'relative' }} // FIX: Added inline style for non-static position
     >
-      {/* Animated background gradients */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 via-black to-purple-900/20"
         style={{ y: backgroundY }}
       />
 
-      {/* Animated grid pattern */}
       <motion.div
         className="absolute inset-0 opacity-10"
         animate={{
@@ -702,7 +700,6 @@ export default function Hero() {
         transition={{ delay: 1 }}
       />
 
-      {/* CurvedLoop dengan spacing yang lebih baik */}
       <motion.div
         className="relative py-6 md:py-10 overflow-hidden mt-8"
         initial={{ opacity: 0, y: 50 }}
@@ -735,7 +732,6 @@ export default function Hero() {
         </div>
       </motion.div>
 
-      {/* Progress indicator */}
       <motion.div
         className="fixed bottom-8 right-8 w-12 h-12 md:w-16 md:h-16 z-50 hidden md:block"
         style={{ rotate: scrollYProgress }}
