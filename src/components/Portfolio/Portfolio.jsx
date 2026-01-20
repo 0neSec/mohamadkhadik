@@ -1,29 +1,18 @@
 // components/Portfolio/Portfolio.jsx
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { 
   FaExternalLinkAlt, 
-  FaGithub, 
-  FaGlobe, 
-  FaRocket,
-  FaCode,
-  FaLeaf,
-  FaRobot,
-  FaTicketAlt,
-  FaShieldAlt,
-  FaBolt,
-  FaMobile,
-  FaFire,
-  FaDatabase,
-  FaImage,
-  FaChevronRight,
-  FaChevronLeft,
-  FaTimes,
-  FaExpand,
-  FaRegHeart,
-  FaEye,
   FaStar,
+  FaPlay,
+  FaPause
 } from "react-icons/fa";
+
+// Import gambar secara langsung
+import Invofest2023 from "../../assets/Invofest2023.webp";
+import WisataKesehatanJamu from "../../assets/Wisata-Kesehatan-Jamu.webp";
+import WKJKalibakung from "../../assets/WKJ-Kalibakung.webp";
+import IIEF from "../../assets/IIEF.webp";
 
 const portfolioItems = [
   { 
@@ -32,12 +21,10 @@ const portfolioItems = [
     url: "https://desaselapura.site", 
     description: "Village profile website with PHP Native-based information & news management system",
     category: "Community",
-    status: "Live",
+    status: "Completed",
     tech: ["PHP Native", "MySQL", "Bootstrap", "jQuery", "AdminLTE"],
-    icon: <FaGlobe />,
-    gradient: "from-emerald-600 to-teal-600",
+    gradient: "from-gray-600 to-gray-800",
     isPWA: false,
-    image: "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
     features: [
       "News & Articles CMS",
       "Photo & Video Gallery",
@@ -45,9 +32,9 @@ const portfolioItems = [
       "Population Database",
       "Online Announcements"
     ],
-    views: 1250,
-    likes: 89,
-    priority: 1
+    priority: 1,
+    image: null,
+    completionDate: "2022"
   },
   { 
     id: 2,
@@ -57,10 +44,8 @@ const portfolioItems = [
     category: "Event",
     status: "Completed",
     tech: ["React.js", "Vite", "Tailwind CSS", "Framer Motion"],
-    icon: <FaRocket />,
     gradient: "from-blue-600 to-cyan-600",
     isPWA: false,
-    image: "https://images.unsplash.com/photo-1535223289827-42f1e9919769?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
     features: [
       "Single Page Application",
       "Interactive Animations",
@@ -68,9 +53,9 @@ const portfolioItems = [
       "Fast Loading",
       "Modern UI/UX"
     ],
-    views: 980,
-    likes: 76,
-    priority: 2
+    priority: 2,
+    image: null,
+    completionDate: "2022"
   },
   { 
     id: 3,
@@ -78,12 +63,10 @@ const portfolioItems = [
     url: "https://infovest2023.phbtegal.com", 
     description: "Event platform with competition registration system, user accounts, and participant dashboard",
     category: "Event",
-    status: "Completed",
+    status: "Live",
     tech: ["React.js", "Firebase", "Tailwind", "Context API"],
-    icon: <FaCode />,
     gradient: "from-indigo-600 to-purple-600",
     isPWA: false,
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
     features: [
       "Authentication System",
       "Real-time Database",
@@ -91,9 +74,10 @@ const portfolioItems = [
       "Registration Forms",
       "Email Notifications"
     ],
-    views: 1120,
-    likes: 94,
-    priority: 1
+    priority: 1,
+    image: Invofest2023, // Menggunakan variabel yang diimpor
+    completionDate: "2023",
+    showLiveBadge: true
   },
   { 
     id: 4,
@@ -101,12 +85,10 @@ const portfolioItems = [
     url: "https://wisatakesehatanjamu.com", 
     description: "Traditional health platform with AI herbal plant detection, content management, and herbal product e-commerce",
     category: "Health AI",
-    status: "Active",
+    status: "Live",
     tech: ["React.js", "Go", "Python",  "PostgreSQL", "TensorFlow"],
-    icon: <FaLeaf />,
     gradient: "from-green-600 to-emerald-600",
     isPWA: false,
-    image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
     lighthouseScore: { performance: 92, pwa: 100, accessibility: 96 },
     features: [
       "AI Plant Detection",
@@ -115,9 +97,10 @@ const portfolioItems = [
       "Booking System",
       "Herbal Database"
     ],
-    views: 1560,
-    likes: 128,
-    priority: 1
+    priority: 1,
+    image: WisataKesehatanJamu, // Menggunakan variabel yang diimpor
+    completionDate: "2024",
+    showLiveBadge: true
   },
   { 
     id: 5,
@@ -125,12 +108,10 @@ const portfolioItems = [
     url: "https://wkjkalibakung.com", 
     description: "Herbal health platform with content management system, AI plant detection, and herbal product catalog",
     category: "Health AI",
-    status: "Active",
+    status: "Live",
     tech: ["React.js", "Go", "Python",  "FastAPI"],
-    icon: <FaRobot />,
     gradient: "from-teal-600 to-cyan-600",
     isPWA: false,
-    image: "https://images.unsplash.com/photo-1585621386289-2c0d5d44b0b0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
     lighthouseScore: { performance: 94, pwa: 100, accessibility: 95 },
     features: [
       "AI Herbal Detection",
@@ -139,9 +120,10 @@ const portfolioItems = [
       "User Dashboard",
       "Mobile Optimized"
     ],
-    views: 1420,
-    likes: 112,
-    priority: 2
+    priority: 2,
+    image: WKJKalibakung, // Menggunakan variabel yang diimpor
+    completionDate: "2024",
+    showLiveBadge: true
   },
   { 
     id: 6,
@@ -149,12 +131,10 @@ const portfolioItems = [
     url: "https://iief.co.id", 
     description: "International event platform with competition registration, ticket & booth purchasing, management dashboard, and mobile check-in",
     category: "Enterprise Event",
-    status: "Active",
+    status: "Live",
     tech: ["Next.js", "Flutter", "Supabase", "Vercel", "Stripe", "PostgreSQL"],
-    icon: <FaTicketAlt />,
     gradient: "from-orange-600 to-red-600",
     isPWA: false,
-    image: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
     features: [
       "Multi-role Dashboard",
       "Payment Integration",
@@ -162,9 +142,10 @@ const portfolioItems = [
       "Real-time Analytics",
       "QR Code System"
     ],
-    views: 1890,
-    likes: 156,
-    priority: 1
+    priority: 1,
+    image: IIEF, // Menggunakan variabel yang diimpor
+    completionDate: "2024",
+    showLiveBadge: true
   }
 ];
 
@@ -259,31 +240,6 @@ const glowVariants = {
   }
 };
 
-const imageVariants = {
-  hidden: { 
-    opacity: 0,
-    scale: 1.2,
-    filter: "blur(10px)"
-  },
-  visible: { 
-    opacity: 1,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: {
-      duration: 0.8,
-      ease: "easeOut"
-    }
-  },
-  hover: {
-    scale: 1.15,
-    filter: "brightness(1.1) saturate(1.2)",
-    transition: {
-      duration: 0.4,
-      ease: "easeOut"
-    }
-  }
-};
-
 const floatingVariants = {
   initial: { y: 0 },
   float: {
@@ -308,14 +264,21 @@ const waveVariants = {
   }
 };
 
+const imageHoverVariants = {
+  initial: { scale: 1 },
+  hover: {
+    scale: 1.05,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut"
+    }
+  }
+};
+
 export default function Portfolio() {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [activeCategory, setActiveCategory] = useState("All");
-  const [showPWAOnly, setShowPWAOnly] = useState(false);
-  const [activeImage, setActiveImage] = useState(null);
-  const [sortBy, setSortBy] = useState("priority");
-  const [likedProjects, setLikedProjects] = useState(new Set());
-  const [imageGalleryIndex, setImageGalleryIndex] = useState(0);
+  const [autoRotate, setAutoRotate] = useState(true);
   
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
@@ -338,78 +301,13 @@ export default function Portfolio() {
   
   const categories = ["All", ...new Set(portfolioItems.map(item => item.category))];
   
-  // Filter and sort logic
+  // Filter logic
   let filteredItems = activeCategory === "All" 
     ? portfolioItems 
     : portfolioItems.filter(item => item.category === activeCategory);
 
-  if (showPWAOnly) {
-    filteredItems = filteredItems.filter(item => item.isPWA);
-  }
-
-  // Sorting
-  filteredItems = [...filteredItems].sort((a, b) => {
-    switch(sortBy) {
-      case "views": return b.views - a.views;
-      case "likes": return b.likes - a.likes;
-      case "priority": return a.priority - b.priority;
-      default: return 0;
-    }
-  });
-
-  const pwaProjects = portfolioItems.filter(item => item.isPWA);
-  const aiProjects = portfolioItems.filter(item => item.category === "Health AI");
-  const totalViews = portfolioItems.reduce((sum, item) => sum + item.views, 0);
-  const totalLikes = portfolioItems.reduce((sum, item) => sum + item.likes, 0);
-
-  const toggleLike = (projectId) => {
-    const newLikedProjects = new Set(likedProjects);
-    if (newLikedProjects.has(projectId)) {
-      newLikedProjects.delete(projectId);
-    } else {
-      newLikedProjects.add(projectId);
-    }
-    setLikedProjects(newLikedProjects);
-  };
-
-  const openImageModal = (imageUrl, index) => {
-    setActiveImage(imageUrl);
-    setImageGalleryIndex(index);
-  };
-
-  const closeImageModal = () => {
-    setActiveImage(null);
-  };
-
-  const navigateGallery = (direction) => {
-    const currentIndex = portfolioItems.findIndex(item => 
-      item.image === activeImage
-    );
-    let newIndex;
-    
-    if (direction === 'next') {
-      newIndex = (currentIndex + 1) % portfolioItems.length;
-    } else {
-      newIndex = (currentIndex - 1 + portfolioItems.length) % portfolioItems.length;
-    }
-    
-    setActiveImage(portfolioItems[newIndex].image);
-    setImageGalleryIndex(newIndex);
-  };
-
-  // Keyboard navigation for gallery
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (activeImage) {
-        if (e.key === 'Escape') closeImageModal();
-        if (e.key === 'ArrowRight') navigateGallery('next');
-        if (e.key === 'ArrowLeft') navigateGallery('prev');
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeImage]);
+  // Sorting by priority only
+  filteredItems = [...filteredItems].sort((a, b) => a.priority - b.priority);
 
   // Floating particles
   const particles = Array.from({ length: 30 }, (_, i) => ({
@@ -420,6 +318,19 @@ export default function Portfolio() {
     duration: 4 + Math.random() * 4,
     delay: i * 0.2
   }));
+
+  // Fungsi untuk mendapatkan fallback image jika gambar tidak tersedia
+  const getImageFallback = (project) => (
+    <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-4xl mb-2 opacity-30">📱</div>
+        <p className="text-gray-500 text-sm">Project Preview</p>
+        {project.completionDate && (
+          <p className="text-gray-600 text-xs mt-1">Completed {project.completionDate}</p>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <section 
@@ -549,6 +460,33 @@ export default function Portfolio() {
           >
             Showcasing innovative digital solutions that blend cutting-edge technology with exceptional user experiences
           </motion.p>
+
+          {/* Live Projects Counter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="mt-12"
+          >
+            <div className="inline-flex items-center gap-4 px-6 py-3 rounded-full bg-gradient-to-r from-green-900/30 via-black/50 to-cyan-900/30 border border-green-500/20">
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                  <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full animate-ping" />
+                </div>
+                <span className="text-green-400 font-semibold">
+                  {portfolioItems.filter(item => item.status === "Live").length} Live Projects
+                </span>
+              </div>
+              <div className="h-4 w-px bg-gray-700" />
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-gray-500 rounded-full" />
+                <span className="text-gray-400">
+                  {portfolioItems.filter(item => item.status === "Completed").length} Completed
+                </span>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
 
         {/* Category filters with scroll animation */}
@@ -573,6 +511,9 @@ export default function Portfolio() {
               const count = category === "All" 
                 ? portfolioItems.length 
                 : portfolioItems.filter(item => item.category === category).length;
+              const liveCount = category === "All"
+                ? portfolioItems.filter(item => item.status === "Live").length
+                : portfolioItems.filter(item => item.category === category && item.status === "Live").length;
               
               return (
                 <motion.button
@@ -583,10 +524,7 @@ export default function Portfolio() {
                     boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)"
                   }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setActiveCategory(category);
-                    setShowPWAOnly(false);
-                  }}
+                  onClick={() => setActiveCategory(category)}
                   className={`
                     h-14 px-6 rounded-full font-medium transition-all duration-300
                     flex items-center justify-center gap-3 relative overflow-hidden group
@@ -599,18 +537,23 @@ export default function Portfolio() {
                   layout
                 >
                   <span className="relative z-10 whitespace-nowrap">{category}</span>
-                  <motion.span 
-                    className={`
-                      min-w-[32px] h-8 flex items-center justify-center text-sm rounded-full relative z-10
-                      ${activeCategory === category 
-                        ? "bg-white/20" 
-                        : "bg-gray-800"
-                      }
-                    `}
-                    whileHover={{ scale: 1.2 }}
-                  >
-                    {count}
-                  </motion.span>
+                  <div className="flex items-center gap-1 relative z-10">
+                    {liveCount > 0 && category !== "All" && (
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    )}
+                    <motion.span 
+                      className={`
+                        min-w-[32px] h-8 flex items-center justify-center text-sm rounded-full
+                        ${activeCategory === category 
+                          ? "bg-white/20" 
+                          : "bg-gray-800"
+                        }
+                      `}
+                      whileHover={{ scale: 1.2 }}
+                    >
+                      {count}
+                    </motion.span>
+                  </div>
                   
                   {/* Active indicator */}
                   {activeCategory === category && (
@@ -633,6 +576,24 @@ export default function Portfolio() {
               );
             })}
           </div>
+        </motion.div>
+
+        {/* Auto-rotate toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="flex justify-center mb-8"
+        >
+          <button
+            onClick={() => setAutoRotate(!autoRotate)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-900/50 border border-gray-700 hover:border-cyan-500/50 transition-colors"
+          >
+            {autoRotate ? <FaPause /> : <FaPlay />}
+            <span className="text-sm text-gray-300">
+              {autoRotate ? "Pause Auto-rotate" : "Play Auto-rotate"}
+            </span>
+          </button>
         </motion.div>
 
         {/* Portfolio Grid with scroll-triggered animations */}
@@ -663,60 +624,6 @@ export default function Portfolio() {
                 transition={{ duration: 0.8, delay: index * 0.1 }}
                 style={{ y: "-50%" }}
               />
-              
-              {/* PWA Badge */}
-              {project.isPWA && (
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={isGridInView ? { scale: 1, rotate: 0 } : {}}
-                  transition={{ type: "spring", delay: index * 0.2 }}
-                  className="absolute -top-4 -right-4 z-20"
-                >
-                  <div className="relative">
-                    <motion.div
-                      animate={{ 
-                        scale: [1, 1.2, 1],
-                        opacity: [0.5, 0.8, 0.5]
-                      }}
-                      transition={{ 
-                        duration: 2, 
-                        repeat: Infinity 
-                      }}
-                      className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur"
-                    />
-                    <div className="relative px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-700 rounded-full text-white text-xs font-bold flex items-center gap-2">
-                      <FaBolt className="text-xs" /> PWA
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* AI Badge */}
-              {project.category === "Health AI" && (
-                <motion.div
-                  initial={{ scale: 0, rotate: 180 }}
-                  animate={isGridInView ? { scale: 1, rotate: 0 } : {}}
-                  transition={{ type: "spring", delay: index * 0.2 }}
-                  className="absolute -top-4 -left-4 z-20"
-                >
-                  <div className="relative">
-                    <motion.div
-                      animate={{ 
-                        scale: [1, 1.2, 1],
-                        opacity: [0.5, 0.8, 0.5]
-                      }}
-                      transition={{ 
-                        duration: 2, 
-                        repeat: Infinity 
-                      }}
-                      className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full blur"
-                    />
-                    <div className="relative px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-700 rounded-full text-white text-xs font-bold flex items-center gap-2">
-                      <FaRobot className="text-xs" /> AI
-                    </div>
-                  </div>
-                </motion.div>
-              )}
 
               {/* Card glow effect */}
               {hoveredCard === project.id && (
@@ -732,7 +639,7 @@ export default function Portfolio() {
               <div className={`
                 relative rounded-2xl overflow-hidden
                 bg-gradient-to-br from-gray-900/90 to-black/90
-                backdrop-blur-xl border border-gray-800
+                backdrop-blur-xl border ${project.status === "Live" ? "border-green-500/30" : "border-gray-800"}
                 h-full flex flex-col
                 transition-all duration-500
                 ${hoveredCard === project.id ? "shadow-2xl shadow-purple-500/20" : "shadow-lg shadow-black/50"}
@@ -757,113 +664,99 @@ export default function Portfolio() {
                   }}
                 />
 
-                {/* Project Image with Hover Effect */}
-                <div className="relative h-56 overflow-hidden">
-                  <motion.img
-                    variants={imageVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    whileHover="hover"
-                    src={project.image}
-                    alt={project.name}
-                    className="w-full h-full object-cover cursor-pointer"
-                    onClick={() => openImageModal(project.image, index)}
-                  />
+                {/* Card header with gradient background */}
+                <div className="relative p-6 pb-4 overflow-hidden">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${project.gradient} opacity-10`} />
                   
-                  {/* Image overlay gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-70"></div>
-                  
-                  {/* View Image Button */}
-                  <motion.button
-                    whileHover={{ scale: 1.1, rotate: 90 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => openImageModal(project.image, index)}
-                    className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70 transition-all z-10"
-                  >
-                    <FaExpand className="text-white text-sm" />
-                  </motion.button>
-                  
-                  {/* Like Button */}
-                  <motion.button
-                    whileTap={{ scale: 0.8 }}
-                    onClick={() => toggleLike(project.id)}
-                    className="absolute top-4 left-4 p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-red-500/20 transition-all z-10"
-                  >
-                    <FaRegHeart className={`text-sm ${likedProjects.has(project.id) ? 'text-red-500 fill-red-500' : 'text-white'}`} />
-                  </motion.button>
-                  
-                  {/* Stats overlay */}
-                  <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1 text-xs text-gray-300">
-                        <FaEye /> {project.views}
-                      </span>
-                      <span className="flex items-center gap-1 text-xs text-gray-300">
-                        <FaRegHeart /> {project.likes}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${categoryColors[project.category]}`}>
-                        {project.category}
-                      </span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        project.status === "Active" || project.status === "Live"
+                  {/* Category and Status */}
+                  <div className="relative flex justify-between items-center gap-2 mb-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${categoryColors[project.category]}`}>
+                      {project.category}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${
+                        project.status === "Live"
                           ? "bg-green-500/20 text-green-300 border border-green-500/30"
-                          : project.status === "Development"
-                          ? "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
-                          : "bg-gray-500/20 text-gray-300 border border-gray-500/30"
+                          : project.status === "Completed"
+                          ? "bg-gray-500/20 text-gray-300 border border-gray-500/30"
+                          : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
                       }`}>
+                        {project.status === "Live" && (
+                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                        )}
                         {project.status}
                       </span>
+                      {project.showLiveBadge && (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                          Live Now
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
+                {/* Project Image */}
+                {project.image ? (
+                  <div className="relative h-48 overflow-hidden">
+                    <motion.div
+                      variants={imageHoverVariants}
+                      initial="initial"
+                      whileHover="hover"
+                      className="relative w-full h-full"
+                    >
+                      <img 
+                        src={project.image} 
+                        alt={project.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error(`Failed to load image for ${project.name}:`, project.image);
+                          e.target.style.display = 'none';
+                          e.target.parentElement.innerHTML = `
+                            <div class="relative h-48 overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/50 flex items-center justify-center">
+                              <div class="text-center">
+                                <div class="text-4xl mb-2 opacity-30">📱</div>
+                                <p class="text-gray-500 text-sm">Project Preview</p>
+                                <p class="text-gray-600 text-xs mt-1">${project.completionDate ? `Completed ${project.completionDate}` : ''}</p>
+                              </div>
+                            </div>
+                          `;
+                        }}
+                      />
+                      {/* Image overlay gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                      
+                      {/* Live indicator on image */}
+                      {project.status === "Live" && (
+                        <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/70 backdrop-blur-sm">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                          <span className="text-xs text-green-300">Live</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  </div>
+                ) : (
+                  getImageFallback(project)
+                )}
+
                 {/* Card content */}
                 <div className="relative z-10 flex flex-col h-full p-6 pt-4">
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4 mt-2">
-                    <motion.div 
-                      className={`p-3 rounded-xl bg-gradient-to-br ${project.gradient} bg-opacity-20`}
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.6 }}
-                    >
-                      <div className="text-xl">
-                        {project.icon}
-                      </div>
-                    </motion.div>
-                    
-                    <div className="flex items-center gap-2">
-                      <motion.a 
-                        href={project.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        whileHover={{ scale: 1.1, y: -2 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
-                        title="Visit Website"
-                      >
-                        <FaExternalLinkAlt className="text-gray-400 hover:text-cyan-400 transition-colors text-sm" />
-                      </motion.a>
-                    </div>
-                  </div>
-
                   {/* Project name and description */}
-                  <div className="mb-4">
+                  <div className="mb-6">
                     <motion.h3 
-                      className="text-xl font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors"
+                      className="text-2xl font-bold text-white mb-3 text-center group-hover:text-cyan-300 transition-colors"
                       whileHover={{ x: 5 }}
                     >
                       {project.name}
                     </motion.h3>
-                    <p className="text-gray-300 text-sm leading-relaxed line-clamp-2">
+                    <p className="text-gray-300 text-sm leading-relaxed text-center">
                       {project.description}
                     </p>
                   </div>
 
                   {/* Tech stack with scroll animation */}
                   <div className="mb-6">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="text-xs text-gray-400 mb-3 text-center">Technologies Used</div>
+                    <div className="flex flex-wrap justify-center gap-2">
                       {project.tech.map((tech, idx) => (
                         <motion.span
                           key={idx}
@@ -871,7 +764,7 @@ export default function Portfolio() {
                           whileInView={{ opacity: 1, scale: 1, y: 0 }}
                           viewport={{ once: true }}
                           transition={{ delay: idx * 0.05 + index * 0.1 }}
-                          className={`px-3 py-1 rounded-full text-xs ${
+                          className={`px-3 py-1.5 rounded-full text-xs ${
                             tech === "PWA" 
                               ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 border border-blue-500/30"
                               : tech === "Python" || tech === "TensorFlow" || tech === "FastAPI"
@@ -895,9 +788,9 @@ export default function Portfolio() {
                   {/* Features */}
                   {project.features && (
                     <div className="mb-6 pt-4 border-t border-gray-800">
-                      <div className="text-xs text-gray-400 mb-2">Key Features</div>
-                      <ul className="space-y-1">
-                        {project.features.slice(0, 3).map((feature, idx) => (
+                      <div className="text-xs text-gray-400 mb-3 text-center">Key Features</div>
+                      <ul className="space-y-2">
+                        {project.features.slice(0, 4).map((feature, idx) => (
                           <motion.li 
                             key={idx} 
                             className="text-gray-300 text-xs flex items-center gap-2"
@@ -910,10 +803,31 @@ export default function Portfolio() {
                               className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${project.gradient}`}
                               whileHover={{ scale: 1.5 }}
                             />
-                            <span className="truncate">{feature}</span>
+                            <span>{feature}</span>
                           </motion.li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {/* Lighthouse Scores for Health AI projects */}
+                  {project.lighthouseScore && (
+                    <div className="mb-6 pt-4 border-t border-gray-800">
+                      <div className="text-xs text-gray-400 mb-3 text-center">Performance Score</div>
+                      <div className="flex justify-center gap-4">
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-green-400">{project.lighthouseScore.performance}</div>
+                          <div className="text-xs text-gray-400">Performance</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-blue-400">{project.lighthouseScore.pwa}</div>
+                          <div className="text-xs text-gray-400">PWA</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-cyan-400">{project.lighthouseScore.accessibility}</div>
+                          <div className="text-xs text-gray-400">Accessibility</div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -926,10 +840,10 @@ export default function Portfolio() {
                     whileTap="tap"
                     className={`
                       relative h-12 mt-auto w-full rounded-xl font-medium flex items-center justify-center gap-3
-                      bg-gradient-to-r from-gray-800 to-gray-900 text-white
-                      border ${project.isPWA ? "border-purple-500/30 hover:border-purple-400" : 
-                        project.category === "Health AI" ? "border-green-500/30 hover:border-green-400" : 
-                        "border-gray-700 hover:border-gray-600"}
+                      ${project.status === "Live" 
+                        ? "bg-gradient-to-r from-green-600/20 to-cyan-600/20 text-white border border-green-500/30 hover:border-green-400" 
+                        : "bg-gradient-to-r from-gray-800 to-gray-900 text-white border border-gray-700 hover:border-gray-600"
+                      }
                       transition-all duration-300 group/btn overflow-hidden
                     `}
                   >
@@ -942,7 +856,7 @@ export default function Portfolio() {
                     />
                     
                     <span className="relative z-10 flex items-center gap-2">
-                      {project.isPWA ? "Install App" : "Visit Site"}
+                      {project.status === "Live" ? "Visit Live Site" : "View Project"}
                       <FaExternalLinkAlt className="group-hover/btn:translate-x-1 transition-transform text-sm" />
                     </span>
                   </motion.a>
@@ -951,107 +865,6 @@ export default function Portfolio() {
             </motion.div>
           ))}
         </motion.div>
-
-        {/* Image Modal/Image Gallery */}
-        <AnimatePresence>
-          {activeImage && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4"
-              onClick={closeImageModal}
-            >
-              {/* Navigation buttons */}
-              <motion.button
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigateGallery('prev');
-                }}
-                className="absolute left-8 top-1/2 -translate-y-1/2 p-4 bg-gray-900/80 backdrop-blur-sm rounded-full hover:bg-gray-800/80 transition-all z-20"
-              >
-                <FaChevronLeft className="text-white text-2xl" />
-              </motion.button>
-
-              <motion.button
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 50 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigateGallery('next');
-                }}
-                className="absolute right-8 top-1/2 -translate-y-1/2 p-4 bg-gray-900/80 backdrop-blur-sm rounded-full hover:bg-gray-800/80 transition-all z-20"
-              >
-                <FaChevronRight className="text-white text-2xl" />
-              </motion.button>
-
-              {/* Close button */}
-              <motion.button
-                initial={{ opacity: 0, y: -50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -50 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={closeImageModal}
-                className="absolute top-8 right-8 p-4 bg-gray-900/80 backdrop-blur-sm rounded-full hover:bg-gray-800/80 transition-all z-20"
-              >
-                <FaTimes className="text-white text-2xl" />
-              </motion.button>
-
-              {/* Image info */}
-              <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 50 }}
-                className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-gray-900/80 backdrop-blur-sm rounded-2xl p-4 min-w-[300px] text-center z-20"
-              >
-                <h3 className="text-white font-bold text-lg">
-                  {portfolioItems[imageGalleryIndex]?.name}
-                </h3>
-                <p className="text-gray-300 text-sm mt-2">
-                  Project {imageGalleryIndex + 1} of {portfolioItems.length}
-                </p>
-              </motion.div>
-
-              {/* Main image */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="relative max-w-6xl max-h-[80vh] w-full"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <motion.img
-                  key={activeImage}
-                  src={activeImage}
-                  alt="Project Preview"
-                  className="w-full h-auto max-h-[70vh] object-contain rounded-2xl"
-                  initial={{ filter: "blur(20px)" }}
-                  animate={{ filter: "blur(0px)" }}
-                  transition={{ duration: 0.5 }}
-                />
-                
-                {/* Loading indicator */}
-                <motion.div
-                  className="absolute inset-0 flex items-center justify-center"
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </section>
   );
