@@ -1,9 +1,7 @@
-// components/Portfolio/Portfolio.jsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FaExternalLinkAlt } from "react-icons/fa";
 
-// Import gambar secara langsung
 import Invofest2023 from "../../assets/Invofest2023.webp";
 import WisataKesehatanJamu from "../../assets/Wisata-Kesehatan-Jamu.webp";
 import WKJKalibakung from "../../assets/WKJ-Kalibakung.webp";
