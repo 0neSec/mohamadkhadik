@@ -1,5 +1,5 @@
 // components/Contact/Contact.jsx
-import React, { useState, useRef, useCallback, useMemo } from "react";
+import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { 
   FaGithub, 
   FaLinkedin, 
@@ -7,9 +7,12 @@ import {
   FaEnvelope, 
   FaMapMarkerAlt, 
   FaUser,
-  FaPaperPlane 
+  FaPaperPlane,
+  FaCheckCircle,
+  FaExclamationCircle
 } from "react-icons/fa";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
+import emailjs from '@emailjs/browser';
 
 // Move static data outside component
 const contactInfo = [
@@ -33,15 +36,15 @@ const contactInfo = [
     value: "Brebes, Jawa Tengah",
     subtext: "Indonesia 52253",
     color: "cyan"
-  },
-  {
-    icon: <FaLinkedin className="w-4 h-4 text-cyan-400" />,
-    title: "LinkedIn",
-    value: "Connect with me",
-    link: "https://www.linkedin.com/in/mohamad-khadik-6996a6387/",
-    color: "purple"
   }
 ];
+
+// EmailJS Configuration - GANTI DENGAN CREDENTIALS ASLI ANDA
+const EMAILJS_CONFIG = {
+  publicKey: "RncjFisdSRaPx3oKZ", // Dari Account > API Keys
+  serviceId: "service_tc782q9", // Dari Email Services (Gmail)
+  templateId: "template_afwrnsp" // Dari Email Templates
+};
 
 // Simplified animation variants
 const containerVariants = {
@@ -64,15 +67,6 @@ const itemVariants = {
   }
 };
 
-const formItemVariants = {
-  hidden: { x: -15, opacity: 0 },
-  visible: (i) => ({
-    x: 0,
-    opacity: 1,
-    transition: { delay: i * 0.05, duration: 0.3 }
-  })
-};
-
 // Extracted FormInput component
 const FormInput = React.memo(({ 
   label, 
@@ -82,14 +76,15 @@ const FormInput = React.memo(({
   onChange, 
   icon, 
   required = true,
-  textarea = false 
+  textarea = false,
+  error
 }) => {
   const InputComponent = textarea ? 'textarea' : 'input';
   
   return (
-    <motion.div variants={formItemVariants} custom={name}>
+    <div>
       <label className="block text-gray-300 mb-1.5 text-xs font-medium">
-        {label}
+        {label} {required && <span className="text-red-400">*</span>}
       </label>
       <div className="relative">
         {icon && (
@@ -106,15 +101,21 @@ const FormInput = React.memo(({
           rows={textarea ? "4" : undefined}
           className={`
             block w-full ${icon ? 'pl-9' : 'px-3'} pr-3 py-2.5
-            bg-gray-800/50 border border-gray-700 rounded-lg
+            bg-gray-800/50 border rounded-lg
             text-white text-sm placeholder-gray-500
-            focus:outline-none focus:ring-1 focus:ring-cyan-500
-            transition-colors duration-200
+            focus:outline-none focus:ring-1 transition-colors duration-200
+            ${error 
+              ? 'border-red-500/50 focus:ring-red-500' 
+              : 'border-gray-700 focus:ring-cyan-500'
+            }
           `}
           placeholder={textarea ? "Your message here..." : `Enter your ${label.toLowerCase()}`}
         />
+        {error && (
+          <p className="text-red-400 text-xs mt-1">{error}</p>
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 });
 
@@ -122,27 +123,6 @@ FormInput.displayName = 'FormInput';
 
 // Extracted ContactInfoItem component
 const ContactInfoItem = React.memo(({ item }) => {
-  const content = (
-    <div>
-      <h3 className="font-semibold text-white text-sm">{item.title}</h3>
-      {item.link ? (
-        <a 
-          href={item.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-300 hover:text-cyan-400 text-sm transition-colors"
-        >
-          {item.value}
-        </a>
-      ) : (
-        <p className="text-gray-300 text-sm">{item.value}</p>
-      )}
-      {item.subtext && (
-        <p className="text-xs text-gray-500 mt-0.5">{item.subtext}</p>
-      )}
-    </div>
-  );
-
   return (
     <motion.div 
       className="flex items-start gap-3 group"
@@ -154,7 +134,13 @@ const ContactInfoItem = React.memo(({ item }) => {
       `}>
         {item.icon}
       </div>
-      {content}
+      <div>
+        <h3 className="font-semibold text-white text-sm">{item.title}</h3>
+        <p className="text-gray-300 text-sm">{item.value}</p>
+        {item.subtext && (
+          <p className="text-xs text-gray-500 mt-0.5">{item.subtext}</p>
+        )}
+      </div>
     </motion.div>
   );
 });
@@ -169,43 +155,171 @@ export default function Contact() {
     message: ""
   });
 
+  const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
+  const [notification, setNotification] = useState({ show: false, type: '', message: '' });
   
   const sectionRef = useRef(null);
+  const formRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
+
+  // Initialize EmailJS dengan public key
+  useEffect(() => {
+    emailjs.init(EMAILJS_CONFIG.publicKey);
+    console.log('✅ EmailJS initialized with public key');
+  }, []);
 
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  }, []);
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  }, [formErrors]);
 
-  const handleSubmit = useCallback((e) => {
+  const validateForm = useCallback(() => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Email is invalid';
+    }
+    
+    if (!formData.subject.trim()) {
+      errors.subject = 'Subject is required';
+    }
+    
+    if (!formData.message.trim()) {
+      errors.message = 'Message is required';
+    } else if (formData.message.trim().length < 10) {
+      errors.message = 'Message must be at least 10 characters';
+    }
+    
+    return errors;
+  }, [formData]);
+
+  const sendEmail = async (data) => {
+    console.log('🚀 Starting email send process via Gmail...');
+    console.log('📝 Form data:', data);
+
+    try {
+      // Template parameters sesuai dengan template di EmailJS
+      const templateParams = {
+        from_name: data.name,
+        from_email: data.email,
+        subject: data.subject,
+        message: data.message,
+        reply_to: data.email,
+        to_email: 'mohamadkhadik7@gmail.com' // Email tujuan
+      };
+
+      console.log('📦 Template params:', templateParams);
+      console.log('🔧 Service ID:', EMAILJS_CONFIG.serviceId);
+      console.log('🔧 Template ID:', EMAILJS_CONFIG.templateId);
+
+      // Kirim email menggunakan EmailJS dengan Gmail service
+      const response = await emailjs.send(
+        EMAILJS_CONFIG.serviceId,
+        EMAILJS_CONFIG.templateId,
+        templateParams
+      );
+
+      console.log('📡 EmailJS response:', response);
+
+      if (response.status === 200) {
+        console.log('✅ Email sent successfully via Gmail!');
+        return true;
+      } else {
+        throw new Error('Failed to send email');
+      }
+    } catch (error) {
+      console.error('❌ EmailJS error:', error);
+      
+      // Log detail error
+      if (error.text) {
+        console.error('Error details:', error.text);
+      }
+      
+      console.log('⚠️ Falling back to mailto...');
+      
+      // Fallback to mailto if EmailJS fails
+      const mailtoLink = `mailto:mohamadkhadik7@gmail.com?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(
+        `Name: ${data.name}\nEmail: ${data.email}\n\nMessage:\n${data.message}`
+      )}`;
+      
+      window.location.href = mailtoLink;
+      return false;
+    }
+  };
+
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+    
+    console.log('📨 Form submission started');
+    
+    // Validate form
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      console.log('❌ Form validation failed:', errors);
+      setFormErrors(errors);
+      setNotification({
+        show: true,
+        type: 'error',
+        message: 'Please fix the errors in the form'
+      });
+      setTimeout(() => setNotification({ show: false, type: '', message: '' }), 3000);
+      return;
+    }
+
+    console.log('✅ Form validation passed');
+    
     setIsSubmitting(true);
     
-    // Create mailto link
-    const mailtoLink = `mailto:mohamadkhadik7@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
-      `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
-    )}`;
-    
-    // Open default email client
-    window.location.href = mailtoLink;
-    
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      subject: "",
-      message: ""
-    });
-    
-    setIsSubmitting(false);
-    setShowNotification(true);
-    
-    // Hide notification after 3 seconds
-    setTimeout(() => setShowNotification(false), 3000);
-  }, [formData]);
+    try {
+      // Send email via Gmail
+      const sent = await sendEmail(formData);
+      
+      if (sent) {
+        console.log('🎉 Email successfully sent via Gmail!');
+      } else {
+        console.log('📧 Email sent via mailto fallback');
+      }
+      
+      // Show success notification
+      setNotification({
+        show: true,
+        type: 'success',
+        message: sent 
+          ? 'Message sent successfully! I\'ll get back to you soon.' 
+          : 'Message sent via email client. Thank you!'
+      });
+      
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        message: ""
+      });
+      
+    } catch (error) {
+      console.error('💥 Unexpected error:', error);
+      setNotification({
+        show: true,
+        type: 'error',
+        message: 'Failed to send message. Please try again.'
+      });
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => setNotification({ show: false, type: '', message: '' }), 5000);
+    }
+  }, [formData, validateForm]);
 
   // Memoize form data for performance
   const memoizedFormData = useMemo(() => formData, [formData]);
@@ -213,7 +327,7 @@ export default function Contact() {
   return (
     <section
       id="contact"
-      className="relative py-12 px-4 sm:px-6 lg:px-8 bg-black"
+      className="relative py-12 px-4 sm:px-6 lg:px-8 bg-black min-h-screen flex items-center"
       ref={sectionRef}
       style={{ 
         contentVisibility: 'auto', 
@@ -224,25 +338,12 @@ export default function Contact() {
       {/* Minimal background */}
       <div className="absolute inset-0 bg-gradient-to-b from-gray-900/10 via-black to-gray-900/10" />
       
-      {/* Decorative line */}
+      {/* Decorative lines */}
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent" />
       <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/10 to-transparent" />
 
-      {/* Minimal floating particles - reduced count */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(2)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-0.5 h-0.5 bg-cyan-500/20 rounded-full"
-            animate={{ y: [0, -20, 0], opacity: [0, 0.2, 0] }}
-            transition={{ duration: 4 + i, repeat: Infinity, delay: i }}
-            style={{ left: `${20 + i * 30}%`, top: `${30 + i * 20}%` }}
-          />
-        ))}
-      </div>
-
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Header - simplified */}
+      <div className="max-w-7xl mx-auto relative z-10 w-full">
+        {/* Header */}
         {isInView && (
           <motion.div
             initial={{ opacity: 0, y: -15 }}
@@ -275,13 +376,14 @@ export default function Contact() {
                   Send Me a Message
                 </h3>
                 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
                   <FormInput
                     label="Name"
                     name="name"
                     value={memoizedFormData.name}
                     onChange={handleInputChange}
                     icon={<FaUser className="h-4 w-4 text-gray-500" />}
+                    error={formErrors.name}
                   />
 
                   <FormInput
@@ -291,6 +393,7 @@ export default function Contact() {
                     value={memoizedFormData.email}
                     onChange={handleInputChange}
                     icon={<FaEnvelope className="h-4 w-4 text-gray-500" />}
+                    error={formErrors.email}
                   />
 
                   <FormInput
@@ -298,6 +401,7 @@ export default function Contact() {
                     name="subject"
                     value={memoizedFormData.subject}
                     onChange={handleInputChange}
+                    error={formErrors.subject}
                   />
 
                   <FormInput
@@ -306,6 +410,7 @@ export default function Contact() {
                     value={memoizedFormData.message}
                     onChange={handleInputChange}
                     textarea={true}
+                    error={formErrors.message}
                   />
 
                   <motion.button
@@ -313,10 +418,27 @@ export default function Contact() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     disabled={isSubmitting}
-                    className="w-full px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                    className={`
+                      w-full px-4 py-2.5 rounded-lg text-sm font-medium
+                      flex items-center justify-center gap-2
+                      transition-all duration-200
+                      ${isSubmitting 
+                        ? 'bg-gray-600 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-cyan-600 to-purple-600 hover:shadow-lg'
+                      }
+                    `}
                   >
-                    <FaPaperPlane className="w-3 h-3" />
-                    <span>{isSubmitting ? "Sending..." : "Send Message"}</span>
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaPaperPlane className="w-3 h-3" />
+                        <span>Send Message</span>
+                      </>
+                    )}
                   </motion.button>
                 </form>
               </div>
@@ -338,7 +460,7 @@ export default function Contact() {
                 </h3>
                 
                 <div className="space-y-4">
-                  {contactInfo.slice(0, 3).map((item, idx) => (
+                  {contactInfo.map((item, idx) => (
                     <ContactInfoItem key={idx} item={item} />
                   ))}
                 </div>
@@ -385,19 +507,33 @@ export default function Contact() {
         </div>
       </div>
 
-      {/* Success Notification */}
-      {showNotification && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="fixed bottom-4 right-4 z-50"
-        >
-          <div className="bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-lg shadow-lg text-sm">
-            Thank you! I'll get back to you soon.
-          </div>
-        </motion.div>
-      )}
+      {/* Notification */}
+      <AnimatePresence>
+        {notification.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-4 right-4 z-50"
+          >
+            <div className={`
+              backdrop-blur-sm px-4 py-3 rounded-lg shadow-lg text-sm
+              flex items-center gap-3 min-w-[300px]
+              ${notification.type === 'success' 
+                ? 'bg-green-500/90 text-white' 
+                : 'bg-red-500/90 text-white'
+              }
+            `}>
+              {notification.type === 'success' ? (
+                <FaCheckCircle className="w-5 h-5 flex-shrink-0" />
+              ) : (
+                <FaExclamationCircle className="w-5 h-5 flex-shrink-0" />
+              )}
+              <span>{notification.message}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
