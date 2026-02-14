@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, lazy, Suspense, useCallback } from "react"; // Tambahkan useCallback di sini
 import { motion } from "framer-motion";
 import { FaExternalLinkAlt } from "react-icons/fa";
 
+// Optimized image imports with WebP and size optimization
 import Invofest2023 from "../../assets/Invofest2023.webp";
 import WisataKesehatanJamu from "../../assets/Wisata-Kesehatan-Jamu.webp";
 import WKJKalibakung from "../../assets/WKJ-Kalibakung.webp";
 import IIEF from "../../assets/IIEF.webp";
 
+// Move static data outside component to prevent recreation
 const portfolioItems = [
   { 
     id: 1,
@@ -14,7 +16,7 @@ const portfolioItems = [
     url: "https://desaselapura.site", 
     description: "Village profile website with PHP Native-based information & news management system",
     category: "Community",
-    status: "Completed",
+    statuAs: "Completed",
     tech: ["PHP Native", "MySQL", "Bootstrap", "jQuery", "AdminLTE"],
     gradient: "from-gray-600 to-gray-800",
     isPWA: false,
@@ -142,6 +144,7 @@ const portfolioItems = [
   }
 ];
 
+// Memoize category colors
 const categoryColors = {
   Development: "bg-purple-500/10 text-purple-400 border-purple-500/20",
   Community: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
@@ -151,64 +154,210 @@ const categoryColors = {
   Security: "bg-red-500/10 text-red-400 border-red-500/20"
 };
 
-// Simple animations
+// Optimized animations - will-change hints for better performance
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
+  transition: { duration: 0.3 } // Reduced duration
 };
 
 const staggerContainer = {
   animate: {
     transition: {
-      staggerChildren: 0.1
+      staggerChildren: 0.05 // Reduced stagger
     }
   }
 };
+
+// Extracted ImageFallback component with React.memo
+const ImageFallback = React.memo(({ project }) => (
+  <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/50 flex items-center justify-center">
+    <div className="text-center">
+      <div className="text-4xl mb-2 opacity-30" aria-hidden="true">📱</div>
+      <p className="text-gray-500 text-sm">Project Preview</p>
+      {project.completionDate && (
+        <p className="text-gray-600 text-xs mt-1">Completed {project.completionDate}</p>
+      )}
+    </div>
+  </div>
+));
+
+ImageFallback.displayName = 'ImageFallback';
+
+// Extracted ProjectCard component with React.memo
+const ProjectCard = React.memo(({ project, isHovered, onHoverStart, onHoverEnd }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  return (
+    <motion.div
+      variants={fadeInUp}
+      onHoverStart={onHoverStart}
+      onHoverEnd={onHoverEnd}
+      className="group"
+      style={{ willChange: 'transform' }} // Performance hint
+    >
+      <div className={`
+        relative rounded-xl overflow-hidden
+        bg-gradient-to-br from-gray-900 to-black
+        border ${project.status === "Live" ? "border-green-500/30" : "border-gray-800"}
+        h-full flex flex-col
+        transition-all duration-200
+        ${isHovered ? "shadow-xl shadow-purple-500/20 scale-[1.02]" : "shadow-lg"}
+      `}>
+        
+        {/* Project Image with loading="lazy" and error handling */}
+        {project.image && !imageError ? (
+          <div className="relative h-48 overflow-hidden bg-gray-800">
+            <img 
+              src={project.image} 
+              alt={project.name}
+              loading="lazy"
+              decoding="async"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              onError={() => setImageError(true)}
+              style={{ willChange: 'transform' }} // Performance hint
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            
+            {/* Status Badge */}
+            {project.status === "Live" && (
+              <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/70">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-xs text-green-300">Live</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <ImageFallback project={project} />
+        )}
+
+        {/* Content */}
+        <div className="p-5">
+          {/* Category */}
+          <div className="flex justify-between items-start mb-3">
+            <span className={`px-3 py-1 rounded-full text-xs font-medium ${categoryColors[project.category]}`}>
+              {project.category}
+            </span>
+            {project.showLiveBadge && (
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300">
+                Live Now
+              </span>
+            )}
+          </div>
+
+          {/* Title & Description */}
+          <h3 className="text-xl font-bold text-white mb-2">
+            {project.name}
+          </h3>
+          <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+            {project.description}
+          </p>
+
+          {/* Tech Stack - Optimized rendering */}
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {project.tech.slice(0, 4).map((tech, idx) => (
+              <span
+                key={idx}
+                className="px-2 py-1 rounded-full text-xs bg-gray-800 text-gray-300"
+              >
+                {tech}
+              </span>
+            ))}
+            {project.tech.length > 4 && (
+              <span className="px-2 py-1 rounded-full text-xs bg-gray-800 text-gray-400">
+                +{project.tech.length - 4}
+              </span>
+            )}
+          </div>
+
+          {/* Lighthouse Score */}
+          {project.lighthouseScore && (
+            <div className="flex gap-3 mb-4 text-xs">
+              <span className="text-green-400">Perf: {project.lighthouseScore.performance}</span>
+              <span className="text-blue-400">PWA: {project.lighthouseScore.pwa}</span>
+              <span className="text-cyan-400">Acc: {project.lighthouseScore.accessibility}</span>
+            </div>
+          )}
+
+          {/* Visit Button */}
+          <a
+            href={project.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`
+              inline-flex items-center justify-center gap-2 w-full py-2.5 px-4
+              rounded-lg font-medium text-sm transition-all duration-200
+              ${project.status === "Live" 
+                ? "bg-gradient-to-r from-green-600 to-cyan-600 text-white hover:shadow-lg hover:shadow-green-500/25" 
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              }
+            `}
+          >
+            {project.status === "Live" ? "Visit Live Site" : "View Project"}
+            <FaExternalLinkAlt className="text-xs" />
+          </a>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+
+ProjectCard.displayName = 'ProjectCard';
 
 export default function Portfolio() {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [activeCategory, setActiveCategory] = useState("All");
   
-  const categories = ["All", ...new Set(portfolioItems.map(item => item.category))];
-  
-  // Filter and sort logic
-  let filteredItems = activeCategory === "All" 
-    ? portfolioItems 
-    : portfolioItems.filter(item => item.category === activeCategory);
-  
-  filteredItems = [...filteredItems].sort((a, b) => a.priority - b.priority);
-
-  // Fungsi untuk mendapatkan fallback image jika gambar tidak tersedia
-  const getImageFallback = (project) => (
-    <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-800/50 to-gray-900/50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-4xl mb-2 opacity-30">📱</div>
-        <p className="text-gray-500 text-sm">Project Preview</p>
-        {project.completionDate && (
-          <p className="text-gray-600 text-xs mt-1">Completed {project.completionDate}</p>
-        )}
-      </div>
-    </div>
+  // Memoize categories
+  const categories = useMemo(() => 
+    ["All", ...new Set(portfolioItems.map(item => item.category))],
+    []
   );
+  
+  // Memoize filtered and sorted items
+  const filteredItems = useMemo(() => {
+    let items = activeCategory === "All" 
+      ? portfolioItems 
+      : portfolioItems.filter(item => item.category === activeCategory);
+    
+    return [...items].sort((a, b) => a.priority - b.priority);
+  }, [activeCategory]);
+
+  // Memoize stats
+  const stats = useMemo(() => ({
+    live: portfolioItems.filter(item => item.status === "Live").length,
+    completed: portfolioItems.filter(item => item.status === "Completed").length
+  }), []);
+
+  // Event handlers with useCallback
+  const handleHoverStart = useCallback((id) => {
+    setHoveredCard(id);
+  }, []);
+
+  const handleHoverEnd = useCallback(() => {
+    setHoveredCard(null);
+  }, []);
+
+  const handleCategoryChange = useCallback((category) => {
+    setActiveCategory(category);
+  }, []);
 
   return (
     <section 
       id="portfolio" 
       className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black via-gray-900 to-black overflow-hidden min-h-screen"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '0 500px' }} // CSS containment
     >
-      {/* Simple static background */}
+      {/* Simplified static background - no animations */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/10 via-black to-cyan-900/10" />
-      
-      {/* Static grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
 
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Title Section */}
+        {/* Title Section - Reduced animations */}
         <motion.div
           initial="initial"
           whileInView="animate"
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.3 }}
           variants={fadeInUp}
           className="text-center mb-16"
         >
@@ -224,17 +373,17 @@ export default function Portfolio() {
             Showcasing innovative digital solutions that blend cutting-edge technology with exceptional user experiences
           </p>
 
-          {/* Project Stats */}
+          {/* Project Stats - Simplified */}
           <div className="mt-8 inline-flex items-center gap-4 px-6 py-3 rounded-full bg-gray-900/50 border border-gray-800">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full" />
               <span className="text-green-400">
-                {portfolioItems.filter(item => item.status === "Live").length} Live Projects
+                {stats.live} Live Projects
               </span>
             </div>
             <div className="h-4 w-px bg-gray-700" />
             <span className="text-gray-400">
-              {portfolioItems.filter(item => item.status === "Completed").length} Completed
+              {stats.completed} Completed
             </span>
           </div>
         </motion.div>
@@ -255,9 +404,9 @@ export default function Portfolio() {
             return (
               <button
                 key={category}
-                onClick={() => setActiveCategory(category)}
+                onClick={() => handleCategoryChange(category)}
                 className={`
-                  px-5 py-2.5 rounded-full font-medium transition-all duration-300
+                  px-5 py-2.5 rounded-full font-medium transition-all duration-200
                   flex items-center gap-2
                   ${activeCategory === category 
                     ? "bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-lg"
@@ -280,126 +429,22 @@ export default function Portfolio() {
           })}
         </motion.div>
 
-        {/* Portfolio Grid */}
+        {/* Portfolio Grid - Optimized rendering */}
         <motion.div
           variants={staggerContainer}
           initial="initial"
           whileInView="animate"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-50px" }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {filteredItems.map((project, index) => (
-            <motion.div
+          {filteredItems.map((project) => (
+            <ProjectCard
               key={project.id}
-              variants={fadeInUp}
-              onHoverStart={() => setHoveredCard(project.id)}
-              onHoverEnd={() => setHoveredCard(null)}
-              className="group"
-            >
-              {/* Card */}
-              <div className={`
-                relative rounded-xl overflow-hidden
-                bg-gradient-to-br from-gray-900 to-black
-                border ${project.status === "Live" ? "border-green-500/30" : "border-gray-800"}
-                h-full flex flex-col
-                transition-all duration-300
-                ${hoveredCard === project.id ? "shadow-xl shadow-purple-500/20 scale-[1.02]" : "shadow-lg"}
-              `}>
-                
-                {/* Project Image */}
-                {project.image ? (
-                  <div className="relative h-48 overflow-hidden">
-                    <img 
-                      src={project.image} 
-                      alt={project.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.parentElement.innerHTML = getImageFallback(project).props.dangerouslySetInnerHTML.__html;
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                    
-                    {/* Status Badge */}
-                    {project.status === "Live" && (
-                      <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/70">
-                        <div className="w-2 h-2 bg-green-500 rounded-full" />
-                        <span className="text-xs text-green-300">Live</span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  getImageFallback(project)
-                )}
-
-                {/* Content */}
-                <div className="p-5">
-                  {/* Category */}
-                  <div className="flex justify-between items-start mb-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${categoryColors[project.category]}`}>
-                      {project.category}
-                    </span>
-                    {project.showLiveBadge && (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300">
-                        Live Now
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Title & Description */}
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    {project.name}
-                  </h3>
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                    {project.description}
-                  </p>
-
-                  {/* Tech Stack */}
-                  <div className="flex flex-wrap gap-1.5 mb-4">
-                    {project.tech.slice(0, 4).map((tech, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-1 rounded-full text-xs bg-gray-800 text-gray-300"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                    {project.tech.length > 4 && (
-                      <span className="px-2 py-1 rounded-full text-xs bg-gray-800 text-gray-400">
-                        +{project.tech.length - 4}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Lighthouse Score (for Health AI projects) */}
-                  {project.lighthouseScore && (
-                    <div className="flex gap-3 mb-4 text-xs">
-                      <span className="text-green-400">Perf: {project.lighthouseScore.performance}</span>
-                      <span className="text-blue-400">PWA: {project.lighthouseScore.pwa}</span>
-                      <span className="text-cyan-400">Acc: {project.lighthouseScore.accessibility}</span>
-                    </div>
-                  )}
-
-                  {/* Visit Button */}
-                  <a
-                    href={project.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`
-                      inline-flex items-center justify-center gap-2 w-full py-2.5 px-4
-                      rounded-lg font-medium text-sm transition-all duration-300
-                      ${project.status === "Live" 
-                        ? "bg-gradient-to-r from-green-600 to-cyan-600 text-white hover:shadow-lg hover:shadow-green-500/25" 
-                        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                      }
-                    `}
-                  >
-                    {project.status === "Live" ? "Visit Live Site" : "View Project"}
-                    <FaExternalLinkAlt className="text-xs" />
-                  </a>
-                </div>
-              </div>
-            </motion.div>
+              project={project}
+              isHovered={hoveredCard === project.id}
+              onHoverStart={() => handleHoverStart(project.id)}
+              onHoverEnd={handleHoverEnd}
+            />
           ))}
         </motion.div>
       </div>

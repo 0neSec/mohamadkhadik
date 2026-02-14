@@ -1,5 +1,5 @@
 // components/Contact/Contact.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import { 
   FaGithub, 
   FaLinkedin, 
@@ -9,7 +9,157 @@ import {
   FaUser,
   FaPaperPlane 
 } from "react-icons/fa";
-import { motion, useInView, useAnimation } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+
+// Move static data outside component
+const contactInfo = [
+  {
+    icon: <FaPhone className="w-4 h-4 text-cyan-400" />,
+    title: "Phone",
+    value: "+62 8572 723 58999",
+    subtext: "Available 9AM - 5PM WIB",
+    color: "cyan"
+  },
+  {
+    icon: <FaEnvelope className="w-4 h-4 text-purple-400" />,
+    title: "Email",
+    value: "mohamadkhadik7@gmail.com",
+    subtext: "Response within 24 hours",
+    color: "purple"
+  },
+  {
+    icon: <FaMapMarkerAlt className="w-4 h-4 text-cyan-300" />,
+    title: "Location",
+    value: "Brebes, Jawa Tengah",
+    subtext: "Indonesia 52253",
+    color: "cyan"
+  },
+  {
+    icon: <FaLinkedin className="w-4 h-4 text-cyan-400" />,
+    title: "LinkedIn",
+    value: "Connect with me",
+    link: "https://www.linkedin.com/in/mohamad-khadik-6996a6387/",
+    color: "purple"
+  }
+];
+
+// Simplified animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.3, ease: "easeOut" }
+  }
+};
+
+const formItemVariants = {
+  hidden: { x: -15, opacity: 0 },
+  visible: (i) => ({
+    x: 0,
+    opacity: 1,
+    transition: { delay: i * 0.05, duration: 0.3 }
+  })
+};
+
+// Extracted FormInput component
+const FormInput = React.memo(({ 
+  label, 
+  name, 
+  type = "text", 
+  value, 
+  onChange, 
+  icon, 
+  required = true,
+  textarea = false 
+}) => {
+  const InputComponent = textarea ? 'textarea' : 'input';
+  
+  return (
+    <motion.div variants={formItemVariants} custom={name}>
+      <label className="block text-gray-300 mb-1.5 text-xs font-medium">
+        {label}
+      </label>
+      <div className="relative">
+        {icon && (
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            {icon}
+          </div>
+        )}
+        <InputComponent
+          type={type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          required={required}
+          rows={textarea ? "4" : undefined}
+          className={`
+            block w-full ${icon ? 'pl-9' : 'px-3'} pr-3 py-2.5
+            bg-gray-800/50 border border-gray-700 rounded-lg
+            text-white text-sm placeholder-gray-500
+            focus:outline-none focus:ring-1 focus:ring-cyan-500
+            transition-colors duration-200
+          `}
+          placeholder={textarea ? "Your message here..." : `Enter your ${label.toLowerCase()}`}
+        />
+      </div>
+    </motion.div>
+  );
+});
+
+FormInput.displayName = 'FormInput';
+
+// Extracted ContactInfoItem component
+const ContactInfoItem = React.memo(({ item }) => {
+  const content = (
+    <div>
+      <h3 className="font-semibold text-white text-sm">{item.title}</h3>
+      {item.link ? (
+        <a 
+          href={item.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-300 hover:text-cyan-400 text-sm transition-colors"
+        >
+          {item.value}
+        </a>
+      ) : (
+        <p className="text-gray-300 text-sm">{item.value}</p>
+      )}
+      {item.subtext && (
+        <p className="text-xs text-gray-500 mt-0.5">{item.subtext}</p>
+      )}
+    </div>
+  );
+
+  return (
+    <motion.div 
+      className="flex items-start gap-3 group"
+      variants={itemVariants}
+    >
+      <div className={`
+        w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0
+        bg-gradient-to-r from-${item.color}-500/10 to-${item.color}-500/5
+      `}>
+        {item.icon}
+      </div>
+      {content}
+    </motion.div>
+  );
+});
+
+ContactInfoItem.displayName = 'ContactInfoItem';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -20,565 +170,234 @@ export default function Contact() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
   
-  // Refs for animation
-  const contactRef = useRef(null);
-  const formRef = useRef(null);
-  const infoRef = useRef(null);
-  const isInView = useInView(contactRef, { once: true, amount: 0.3 });
-  const controls = useAnimation();
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, amount: 0.1 });
 
-  useEffect(() => {
-    if (isInView) {
-      controls.start("visible");
-    }
-  }, [controls, isInView]);
-
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    console.log("Form submitted:", formData);
+    // Create mailto link
+    const mailtoLink = `mailto:mohamadkhadik7@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
+      `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
+    )}`;
     
-    // Animation for button
-    setTimeout(() => {
-      const mailtoLink = `mailto:mohamadkhadik7@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`)}`;
-      window.location.href = mailtoLink;
-      
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: ""
-      });
-      
-      setIsSubmitting(false);
-      
-      // Success notification animation
-      const successEl = document.createElement("div");
-      successEl.className = "fixed top-8 right-8 bg-green-500/90 backdrop-blur-sm text-white px-6 py-3 rounded-lg shadow-xl z-50 animate-fade-in";
-      successEl.innerHTML = "Thank you! I'll get back to you soon.";
-      document.body.appendChild(successEl);
-      
-      setTimeout(() => {
-        successEl.remove();
-      }, 3000);
-    }, 1500);
-  };
+    // Open default email client
+    window.location.href = mailtoLink;
+    
+    // Reset form
+    setFormData({
+      name: "",
+      email: "",
+      subject: "",
+      message: ""
+    });
+    
+    setIsSubmitting(false);
+    setShowNotification(true);
+    
+    // Hide notification after 3 seconds
+    setTimeout(() => setShowNotification(false), 3000);
+  }, [formData]);
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 12,
-      },
-    },
-  };
-
-  const formItemVariants = {
-    hidden: { x: -20, opacity: 0 },
-    visible: (i) => ({
-      x: 0,
-      opacity: 1,
-      transition: {
-        delay: i * 0.1,
-        duration: 0.5,
-      },
-    }),
-  };
-
-  const contactInfoVariants = {
-    hidden: { x: 20, opacity: 0 },
-    visible: (i) => ({
-      x: 0,
-      opacity: 1,
-      transition: {
-        delay: i * 0.1,
-        duration: 0.5,
-      },
-    }),
-  };
-
-  const buttonVariants = {
-    initial: { scale: 1 },
-    hover: { 
-      scale: 1.05,
-      boxShadow: "0 10px 25px -5px rgba(6, 182, 212, 0.5)",
-      transition: { type: "spring", stiffness: 400, damping: 10 }
-    },
-    tap: { scale: 0.95 },
-  };
-
-  const iconVariants = {
-    hover: { 
-      rotate: [0, -10, 10, -5, 5, 0],
-      transition: { duration: 0.5 }
-    }
-  };
-
-  const floatingAnimation = {
-    animate: {
-      y: [0, -10, 0],
-      transition: {
-        repeat: Infinity,
-        duration: 3,
-        ease: "easeInOut"
-      }
-    }
-  };
+  // Memoize form data for performance
+  const memoizedFormData = useMemo(() => formData, [formData]);
 
   return (
-    <motion.section
+    <section
       id="contact"
-      className="relative py-16 px-4 sm:px-6 lg:px-8 overflow-hidden"
-      ref={contactRef}
-      initial="hidden"
-      animate={controls}
-      variants={containerVariants}
+      className="relative py-12 px-4 sm:px-6 lg:px-8 bg-black"
+      ref={sectionRef}
+      style={{ 
+        contentVisibility: 'auto', 
+        containIntrinsicSize: '0 500px',
+        willChange: 'transform'
+      }}
     >
-      {/* Animated background elements */}
-      <motion.div
-        className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"
-        variants={{
-          hidden: { width: 0 },
-          visible: { width: "100%", transition: { duration: 1 } }
-        }}
-      />
+      {/* Minimal background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-900/10 via-black to-gray-900/10" />
       
-      <motion.div
-        className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent"
-        variants={{
-          hidden: { width: 0 },
-          visible: { width: "100%", transition: { duration: 1, delay: 0.5 } }
-        }}
-      />
+      {/* Decorative line */}
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent" />
+      <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/10 to-transparent" />
 
-      {/* Floating particles */}
-      <motion.div 
-        className="absolute top-20 left-10 w-2 h-2 bg-cyan-400/20 rounded-full"
-        animate={{ y: [0, 30, 0], x: [0, 10, 0] }}
-        transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-      />
-      <motion.div 
-        className="absolute top-40 right-20 w-3 h-3 bg-purple-400/20 rounded-full"
-        animate={{ y: [0, -30, 0], x: [0, -15, 0] }}
-        transition={{ repeat: Infinity, duration: 6, ease: "easeInOut", delay: 0.5 }}
-      />
+      {/* Minimal floating particles - reduced count */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(2)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-0.5 h-0.5 bg-cyan-500/20 rounded-full"
+            animate={{ y: [0, -20, 0], opacity: [0, 0.2, 0] }}
+            transition={{ duration: 4 + i, repeat: Infinity, delay: i }}
+            style={{ left: `${20 + i * 30}%`, top: `${30 + i * 20}%` }}
+          />
+        ))}
+      </div>
 
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          className="text-center mb-12"
-          variants={itemVariants}
-        >
-          <motion.h2 
-            className="text-4xl md:text-5xl font-bold mb-4"
-            initial={{ opacity: 0, y: -20 }}
+      <div className="max-w-7xl mx-auto relative z-10">
+        {/* Header - simplified */}
+        {isInView && (
+          <motion.div
+            initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.3 }}
+            className="text-center mb-10"
           >
-            <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              Get In Touch
-            </span>
-          </motion.h2>
-          
-          <motion.p 
-            className="text-gray-400 text-lg max-w-2xl mx-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-          >
-            Let's discuss your next project or just say hello!
-          </motion.p>
-        </motion.div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                Get In Touch
+              </span>
+            </h2>
+            <p className="text-sm text-gray-400 max-w-2xl mx-auto">
+              Let's discuss your next project or just say hello!
+            </p>
+          </motion.div>
+        )}
         
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-6">
           {/* Form Section */}
-          <motion.div
-            ref={formRef}
-            className="relative"
-            variants={itemVariants}
-            whileHover={{ scale: 1.01 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          >
+          {isInView && (
             <motion.div
-              className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-xl blur opacity-0 hover:opacity-70 transition duration-500"
-              animate={{ opacity: [0.3, 0.5, 0.3] }}
-              transition={{ repeat: Infinity, duration: 3 }}
-            />
-            
-            <div className="relative bg-gray-900/80 backdrop-blur-xl rounded-xl p-8 border border-gray-800 shadow-xl">
-              <motion.h3 
-                className="text-2xl font-bold mb-6 text-white"
-                variants={formItemVariants}
-                custom={0}
-              >
-                Send Me a Message
-              </motion.h3>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Name Input */}
-                <motion.div
-                  variants={formItemVariants}
-                  custom={1}
-                >
-                  <label className="block text-gray-300 mb-2 text-sm font-medium">
-                    Your Name
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <motion.div
-                        whileHover={{ rotate: 10 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                      >
-                        <FaUser className="h-5 w-5 text-gray-500" />
-                      </motion.div>
-                    </div>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      className="block w-full pl-10 pr-3 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300 hover:border-cyan-500/50"
-                      placeholder="Enter your name"
-                    />
-                  </div>
-                </motion.div>
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="relative"
+            >
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+                <h3 className="text-lg font-bold mb-4 text-white">
+                  Send Me a Message
+                </h3>
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <FormInput
+                    label="Name"
+                    name="name"
+                    value={memoizedFormData.name}
+                    onChange={handleInputChange}
+                    icon={<FaUser className="h-4 w-4 text-gray-500" />}
+                  />
 
-                {/* Email Input */}
-                <motion.div
-                  variants={formItemVariants}
-                  custom={2}
-                >
-                  <label className="block text-gray-300 mb-2 text-sm font-medium">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <motion.div
-                        whileHover={{ rotate: -10 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                      >
-                        <FaEnvelope className="h-5 w-5 text-gray-500" />
-                      </motion.div>
-                    </div>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      className="block w-full pl-10 pr-3 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50"
-                      placeholder="Enter your email"
-                    />
-                  </div>
-                </motion.div>
+                  <FormInput
+                    label="Email"
+                    name="email"
+                    type="email"
+                    value={memoizedFormData.email}
+                    onChange={handleInputChange}
+                    icon={<FaEnvelope className="h-4 w-4 text-gray-500" />}
+                  />
 
-                {/* Subject Input */}
-                <motion.div
-                  variants={formItemVariants}
-                  custom={3}
-                >
-                  <label className="block text-gray-300 mb-2 text-sm font-medium">
-                    Subject
-                  </label>
-                  <input
-                    type="text"
+                  <FormInput
+                    label="Subject"
                     name="subject"
-                    value={formData.subject}
+                    value={memoizedFormData.subject}
                     onChange={handleInputChange}
-                    required
-                    className="block w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300 hover:border-cyan-500/50"
-                    placeholder="What is this regarding?"
                   />
-                </motion.div>
 
-                {/* Message Textarea */}
-                <motion.div
-                  variants={formItemVariants}
-                  custom={4}
-                >
-                  <label className="block text-gray-300 mb-2 text-sm font-medium">
-                    Message
-                  </label>
-                  <textarea
+                  <FormInput
+                    label="Message"
                     name="message"
-                    value={formData.message}
+                    value={memoizedFormData.message}
                     onChange={handleInputChange}
-                    required
-                    rows="5"
-                    className="block w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none transition-all duration-300 hover:border-purple-500/50"
-                    placeholder="Your message here..."
+                    textarea={true}
                   />
-                </motion.div>
 
-                {/* Submit Button */}
-                <motion.button
-                  type="submit"
-                  variants={buttonVariants}
-                  initial="initial"
-                  whileHover="hover"
-                  whileTap="tap"
-                  animate={isSubmitting ? { scale: [1, 0.9, 1] } : "initial"}
-                  transition={isSubmitting ? { repeat: Infinity, duration: 1 } : {}}
-                  disabled={isSubmitting}
-                  className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500 bg-[length:200%_auto] rounded-lg font-medium hover:shadow-xl transition-all duration-500 flex items-center justify-center gap-3 group relative overflow-hidden"
-                >
-                  <motion.span
-                    className="absolute inset-0 bg-gradient-to-r from-cyan-600 via-purple-600 to-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    animate={isSubmitting ? { x: ["-100%", "100%"] } : {}}
-                    transition={isSubmitting ? { repeat: Infinity, duration: 1 } : {}}
-                  />
-                  
-                  <motion.div
-                    className="relative z-10 flex items-center gap-2"
-                    variants={iconVariants}
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                   >
-                    <FaPaperPlane className="w-4 h-4 group-hover:rotate-45 transition-transform duration-300" />
-                    <span className="font-semibold">
-                      {isSubmitting ? "Sending..." : "Send Message"}
-                    </span>
-                  </motion.div>
-                </motion.button>
-              </form>
-            </div>
-          </motion.div>
+                    <FaPaperPlane className="w-3 h-3" />
+                    <span>{isSubmitting ? "Sending..." : "Send Message"}</span>
+                  </motion.button>
+                </form>
+              </div>
+            </motion.div>
+          )}
 
-          {/* Contact Information Section */}
-          <motion.div
-            ref={infoRef}
-            className="space-y-6"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {/* Contact Info Card */}
+          {/* Contact Information */}
+          {isInView && (
             <motion.div
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="relative"
+              initial={{ opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className="space-y-4"
             >
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-xl blur opacity-0 hover:opacity-50 transition duration-500" />
-              
-              <div className="relative bg-gray-900/80 backdrop-blur-xl rounded-xl p-8 border border-gray-800 shadow-xl">
-                <motion.h3 
-                  className="text-2xl font-bold mb-6 text-white"
-                  variants={contactInfoVariants}
-                  custom={0}
-                >
+              {/* Contact Info Card */}
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+                <h3 className="text-lg font-bold mb-4 text-white">
                   Contact Information
-                </motion.h3>
+                </h3>
                 
-                <div className="space-y-6">
-                  {/* Phone */}
-                  <motion.div 
-                    className="flex items-center gap-4 group"
-                    variants={contactInfoVariants}
-                    custom={1}
-                    whileHover={{ x: 5 }}
-                  >
-                    <motion.div 
-                      className="w-12 h-12 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <FaPhone className="w-5 h-5 text-cyan-400" />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-semibold text-white">Phone</h3>
-                      <p className="text-gray-300">+62 8572 723 58999</p>
-                      <p className="text-sm text-gray-500">Available 9AM - 5PM WIB</p>
-                    </div>
-                  </motion.div>
-                  
-                  {/* Email */}
-                  <motion.div 
-                    className="flex items-center gap-4 group"
-                    variants={contactInfoVariants}
-                    custom={2}
-                    whileHover={{ x: 5 }}
-                  >
-                    <motion.div 
-                      className="w-12 h-12 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
-                      whileHover={{ rotate: -360 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <FaEnvelope className="w-5 h-5 text-purple-400" />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-semibold text-white">Email</h3>
-                      <p className="text-gray-300">mohamadkhadik7@gmail.com</p>
-                      <p className="text-sm text-gray-500">Response within 24 hours</p>
-                    </div>
-                  </motion.div>
-                  
-                  {/* Location */}
-                  <motion.div 
-                    className="flex items-center gap-4 group"
-                    variants={contactInfoVariants}
-                    custom={3}
-                    whileHover={{ x: 5 }}
-                  >
-                    <motion.div 
-                      className="w-12 h-12 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
-                      animate={floatingAnimation}
-                    >
-                      <FaMapMarkerAlt className="w-5 h-5 text-cyan-300" />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-semibold text-white">Location</h3>
-                      <p className="text-gray-300">Brebes, Jawa Tengah</p>
-                      <p className="text-gray-300">Indonesia 52253</p>
-                    </div>
-                  </motion.div>
-                  
-                  {/* LinkedIn */}
-                  <motion.div 
-                    className="flex items-center gap-4 group"
-                    variants={contactInfoVariants}
-                    custom={4}
-                    whileHover={{ x: 5 }}
-                  >
-                    <motion.div 
-                      className="w-12 h-12 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300"
-                      whileHover={{ rotate: 15 }}
-                      transition={{ type: "spring", stiffness: 200 }}
-                    >
-                      <FaLinkedin className="w-5 h-5 text-cyan-400" />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-semibold text-white">LinkedIn</h3>
-                      <motion.a 
-                        href="https://www.linkedin.com/in/mohamad-khadik-6996a6387/" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-gray-300 hover:text-cyan-400 transition-colors inline-block"
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        Connect with me on LinkedIn
-                      </motion.a>
-                    </div>
-                  </motion.div>
+                <div className="space-y-4">
+                  {contactInfo.slice(0, 3).map((item, idx) => (
+                    <ContactInfoItem key={idx} item={item} />
+                  ))}
                 </div>
                 
-                <motion.div 
-                  className="mt-8 pt-8 border-t border-gray-800"
-                  variants={contactInfoVariants}
-                  custom={5}
-                >
-                  <p className="text-gray-400 text-center mb-4">
-                    Available for freelance work and full-time opportunities
-                  </p>
-                  <div className="flex justify-center">
-                    <motion.a 
-                      href="mailto:mohamadkhadik7@gmail.com"
-                      className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-lg font-medium hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 relative overflow-hidden group"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <span className="relative z-10">Email Directly</span>
-                      <motion.span 
-                        className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        initial={{ x: "-100%" }}
-                        whileHover={{ x: "100%" }}
-                        transition={{ duration: 0.5 }}
-                      />
-                    </motion.a>
-                  </div>
-                </motion.div>
+                {/* Quick Email Button */}
+                <div className="mt-6 pt-4 border-t border-gray-800">
+                  <a
+                    href="mailto:mohamadkhadik7@gmail.com"
+                    className="block w-full px-4 py-2.5 bg-gray-800/50 rounded-lg text-sm text-center hover:bg-gray-800 transition-colors"
+                  >
+                    Email Directly
+                  </a>
+                </div>
               </div>
-            </motion.div>
 
-            {/* Social Links Card */}
-            <motion.div
-              variants={itemVariants}
-              whileHover={{ scale: 1.03 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="relative"
-            >
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-xl blur opacity-0 hover:opacity-50 transition duration-500" />
-              
-              <div className="relative bg-gray-900/80 backdrop-blur-xl rounded-xl p-6 border border-gray-800 shadow-xl">
-                <motion.h3 
-                  className="text-xl font-bold mb-4 text-white"
-                  variants={contactInfoVariants}
-                  custom={6}
-                >
+              {/* Social Links */}
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+                <h3 className="text-lg font-bold mb-4 text-white">
                   Connect With Me
-                </motion.h3>
+                </h3>
                 
-                <div className="flex gap-4">
-                  <motion.a 
-                    href="https://www.linkedin.com/in/mohamad-khadik-6996a6387/" 
-                    target="_blank" 
+                <div className="flex gap-3">
+                  <a
+                    href="https://www.linkedin.com/in/mohamad-khadik-6996a6387/"
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 px-4 py-3 bg-gray-800/50 rounded-lg hover:bg-gradient-to-r hover:from-cyan-500/20 hover:to-transparent transition-all duration-300 flex items-center justify-center gap-2 group relative overflow-hidden"
-                    whileHover={{ y: -5 }}
-                    whileTap={{ scale: 0.95 }}
+                    className="flex-1 px-3 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors text-center text-sm"
                   >
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-                      className="absolute w-full h-full opacity-0 group-hover:opacity-5"
-                    >
-                      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-cyan-500 to-transparent" />
-                    </motion.div>
-                    
-                    <FaLinkedin className="w-5 h-5 text-cyan-400 group-hover:scale-125 transition-transform duration-300" />
-                    <span className="font-medium">LinkedIn</span>
-                  </motion.a>
+                    LinkedIn
+                  </a>
                   
-                  <motion.a 
-                    href="https://github.com/onesec" 
-                    target="_blank" 
+                  <a
+                    href="https://github.com/onesec"
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 px-4 py-3 bg-gray-800/50 rounded-lg hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-transparent transition-all duration-300 flex items-center justify-center gap-2 group relative overflow-hidden"
-                    whileHover={{ y: -5 }}
-                    whileTap={{ scale: 0.95 }}
+                    className="flex-1 px-3 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors text-center text-sm"
                   >
-                    <motion.div
-                      animate={{ rotate: -360 }}
-                      transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-                      className="absolute w-full h-full opacity-0 group-hover:opacity-5"
-                    >
-                      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-purple-500 to-transparent" />
-                    </motion.div>
-                    
-                    <FaGithub className="w-5 h-5 text-purple-400 group-hover:scale-125 transition-transform duration-300" />
-                    <span className="font-medium">GitHub</span>
-                  </motion.a>
+                    GitHub
+                  </a>
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          )}
         </div>
       </div>
-    </motion.section>
+
+      {/* Success Notification */}
+      {showNotification && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className="fixed bottom-4 right-4 z-50"
+        >
+          <div className="bg-green-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-lg shadow-lg text-sm">
+            Thank you! I'll get back to you soon.
+          </div>
+        </motion.div>
+      )}
+    </section>
   );
 }

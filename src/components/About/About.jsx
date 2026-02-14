@@ -1,103 +1,33 @@
-import React from "react";
+import React, { useRef, useMemo, useCallback } from "react";
 import { motion, useInView } from "framer-motion";
-import { 
-  FaGraduationCap, 
-  FaUser     
-} from "react-icons/fa";
+import { FaGraduationCap, FaUser } from "react-icons/fa";
 
-// Variants untuk animasi
+// Simplified animation variants - reduced complexity
 const fadeInUpVariants = {
-  hidden: {
-    opacity: 0,
-    y: 50,
-    scale: 0.95,
-  },
-  visible: {
-    opacity: 1,
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
     y: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15,
-      mass: 0.8,
-    },
+    transition: { duration: 0.4, ease: "easeOut" }
   },
 };
 
 const fadeInLeftVariants = {
-  hidden: {
-    opacity: 0,
-    x: -100,
-    rotateY: -15,
-  },
-  visible: {
-    opacity: 1,
+  hidden: { opacity: 0, x: -30 },
+  visible: { 
+    opacity: 1, 
     x: 0,
-    rotateY: 0,
-    transition: {
-      type: "spring",
-      stiffness: 80,
-      damping: 12,
-      mass: 0.8,
-    },
+    transition: { duration: 0.4, ease: "easeOut" }
   },
 };
 
 const fadeInRightVariants = {
-  hidden: {
-    opacity: 0,
-    x: 100,
-    rotateY: 15,
-  },
-  visible: {
-    opacity: 1,
+  hidden: { opacity: 0, x: 30 },
+  visible: { 
+    opacity: 1, 
     x: 0,
-    rotateY: 0,
-    transition: {
-      type: "spring",
-      stiffness: 80,
-      damping: 12,
-      mass: 0.8,
-    },
+    transition: { duration: 0.4, ease: "easeOut" }
   },
-};
-
-const scaleInVariants = {
-  hidden: {
-    opacity: 0,
-    scale: 0.5,
-    rotate: 180,
-  },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    rotate: 0,
-    transition: {
-      type: "spring",
-      stiffness: 200,
-      damping: 20,
-      mass: 1,
-    },
-  },
-};
-
-const textRevealVariants = {
-  hidden: {
-    opacity: 0,
-    y: 30,
-    filter: "blur(10px)",
-  },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: {
-      delay: i * 0.1,
-      duration: 0.8,
-      ease: "easeOut",
-    },
-  }),
 };
 
 const staggerContainerVariants = {
@@ -105,224 +35,270 @@ const staggerContainerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.15,
+      staggerChildren: 0.1,
       delayChildren: 0.1,
     },
   },
 };
 
+// Simplified hover effect - no complex transforms
 const cardHoverVariants = {
-  hover: {
-    y: -8,
-    scale: 1.02,
-    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
-    transition: {
-      type: "spring",
-      stiffness: 400,
-      damping: 25,
-    },
-  },
-  tap: {
-    scale: 0.98,
+  hover: { 
+    y: -4,
+    transition: { duration: 0.2 }
   },
 };
 
+// Memoized particle configuration
+const particles = Array.from({ length: 5 }, (_, i) => ({
+  id: i,
+  style: {
+    width: Math.random() * 2 + 1,
+    height: Math.random() * 2 + 1,
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+  },
+  animation: {
+    y: [0, -50, 0],
+    opacity: [0, 0.3, 0],
+  },
+  transition: {
+    duration: 3 + Math.random() * 2,
+    repeat: Infinity,
+    delay: i * 0.2,
+  }
+}));
+
+// Memoized About Card Component
+const AboutCard = React.memo(({ isInView, onHoverStart, onHoverEnd }) => (
+  <motion.div
+    variants={fadeInLeftVariants}
+    whileHover="hover"
+    variants={cardHoverVariants}
+    onHoverStart={onHoverStart}
+    onHoverEnd={onHoverEnd}
+  >
+    <div 
+      className="w-full border border-gray-800/50 bg-gradient-to-br from-gray-900/80 to-gray-900/40 backdrop-blur-sm rounded-2xl p-6 md:p-8 hover:border-cyan-500/50 transition-all duration-200 text-left group relative overflow-hidden"
+      role="article"
+      aria-label="Tentang Saya section"
+    >
+      {/* Simplified background effect - no animation */}
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      <div className="relative z-10">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex-1">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-gray-300 leading-relaxed mb-3 text-sm md:text-base"
+            >
+              Saya adalah lulusan Sarjana Terapan Teknik Informatika dari Universitas Harkat Negeri Tegal dengan minat besar di bidang pengembangan web. Selama masa studi, saya telah menguasai berbagai teknologi dan framework seperti React.js, Next.js, dan Laravel.
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-gray-300 leading-relaxed text-sm md:text-base"
+            >
+              Saya bersemangat untuk terus belajar dan berkontribusi dalam menciptakan solusi digital yang inovatif.
+            </motion.p>
+          </div>
+          <div className="ml-4 p-2 bg-gradient-to-br from-cyan-500/20 to-cyan-500/10 rounded-lg flex-shrink-0">
+            <FaUser className="w-5 h-5 text-cyan-400" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+));
+
+AboutCard.displayName = 'AboutCard';
+
+// Memoized Education Card Component
+const EducationCard = React.memo(({ 
+  school, 
+  period, 
+  degree, 
+  gpa, 
+  description, 
+  color = "purple",
+  isInView,
+  index 
+}) => {
+  const isPurple = color === "purple";
+  const hoverColor = isPurple ? "purple" : "cyan";
+  
+  return (
+    <motion.div
+      variants={fadeInRightVariants}
+      whileHover="hover"
+      variants={cardHoverVariants}
+      custom={index}
+    >
+      <div 
+        className={`w-full border border-gray-800/50 bg-gradient-to-br from-gray-900/80 to-gray-900/40 backdrop-blur-sm rounded-2xl p-6 md:p-8 hover:border-${hoverColor}-500/50 transition-all duration-200 text-left group relative overflow-hidden`}
+        role="article"
+        aria-label={`Pendidikan di ${school}`}
+      >
+        {/* Simplified background effect */}
+        <div className={`absolute inset-0 bg-gradient-to-r from-${hoverColor}-500/0 via-${hoverColor}-500/5 to-${hoverColor}-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+        
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row justify-between items-start mb-3 gap-2">
+            <motion.h4
+              initial={{ opacity: 0, x: 10 }}
+              animate={isInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ delay: 0.1 + index * 0.1 }}
+              className="text-base md:text-lg font-semibold text-white"
+            >
+              {school}
+            </motion.h4>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
+              transition={{ delay: 0.2 + index * 0.1 }}
+              className={`px-3 py-1 bg-gradient-to-r from-${hoverColor}-500/20 to-${hoverColor}-500/10 text-${hoverColor}-300 rounded-full text-xs font-medium`}
+            >
+              {period}
+            </motion.span>
+          </div>
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.2 + index * 0.1 }}
+            className={`text-${hoverColor}-300 font-medium mb-2 text-sm md:text-base`}
+          >
+            {degree}
+          </motion.p>
+          
+          {gpa && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
+              transition={{ delay: 0.3 + index * 0.1 }}
+              className="text-gray-400 mb-2 text-sm"
+            >
+              IPK: {gpa}
+            </motion.p>
+          )}
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.3 + index * 0.1 }}
+            className="text-gray-300 text-xs md:text-sm"
+          >
+            {description}
+          </motion.p>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+
+EducationCard.displayName = 'EducationCard';
+
 export default function About() {
   // Refs untuk deteksi scroll
-  const sectionRef = React.useRef(null);
-  const aboutRef = React.useRef(null);
-  const educationRef = React.useRef(null);
-  const timelineRef = React.useRef(null);
+  const sectionRef = useRef(null);
+  const aboutRef = useRef(null);
+  const educationRef = useRef(null);
 
-  // InView detectors
-  const isSectionInView = useInView(sectionRef, { once: false, amount: 0.3 });
-  const isAboutInView = useInView(aboutRef, { once: false, amount: 0.5 });
-  const isEducationInView = useInView(educationRef, { once: false, amount: 0.5 });
-  const isTimelineInView = useInView(timelineRef, { once: false, amount: 0.3 });
+  // InView detectors - reduced amount for better performance
+  const isSectionInView = useInView(sectionRef, { once: true, amount: 0.1 });
+  const isAboutInView = useInView(aboutRef, { once: true, amount: 0.1 });
+  const isEducationInView = useInView(educationRef, { once: true, amount: 0.1 });
+
+  // Empty handlers to satisfy props
+  const handleHoverStart = useCallback(() => {}, []);
+  const handleHoverEnd = useCallback(() => {}, []);
 
   return (
-    <section ref={sectionRef} className="relative bg-black overflow-hidden py-16 md:py-24">
-      {/* Animated background gradients */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-cyan-900/10 via-black to-purple-900/10"
-        initial={{ opacity: 0 }}
-        animate={isSectionInView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 1 }}
-      />
+    <section 
+      ref={sectionRef} 
+      className="relative bg-black overflow-hidden py-12 md:py-16 lg:py-20"
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '0 500px' }}
+    >
+      {/* Simplified static background - no animations */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/5 via-black to-purple-900/5" />
       
-      {/* Animated grid pattern */}
-      <motion.div
-        className="absolute inset-0 opacity-5"
-        animate={{
-          backgroundPosition: ["0px 0px", "100px 100px"],
-        }}
-        transition={{
-          duration: 30,
-          repeat: Infinity,
-          ease: "linear",
-        }}
+      {/* Static grid pattern - no animation */}
+      <div 
+        className="absolute inset-0 opacity-3"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           backgroundSize: "60px 60px",
         }}
       />
       
-      {/* Floating particles */}
+      {/* Reduced number of particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: 8 }, (_, i) => (
+        {particles.map((particle) => (
           <motion.div
-            key={i}
+            key={particle.id}
             className="absolute rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20"
-            style={{
-              width: Math.random() * 3 + 1,
-              height: Math.random() * 3 + 1,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -100, 0],
-              x: [0, Math.random() * 20 - 10, 0],
-              opacity: [0, 0.5, 0],
-              scale: [0.5, 1.2, 0.5],
-            }}
-            transition={{
-              duration: 4 + Math.random() * 3,
-              repeat: Infinity,
-              delay: i * 0.3,
-              ease: "easeInOut",
-            }}
+            style={particle.style}
+            animate={particle.animation}
+            transition={particle.transition}
           />
         ))}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header dengan animasi */}
+        {/* Section Header - simplified animation */}
         <motion.div
           initial="hidden"
           animate={isSectionInView ? "visible" : "hidden"}
           variants={staggerContainerVariants}
-          className="text-center mb-16 md:mb-20 cursor-default"
+          className="text-center mb-12 md:mb-16"
         >
           <motion.h2
             variants={fadeInUpVariants}
-            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4"
+            className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3"
           >
-            <motion.span
-              className="bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent bg-[length:200%_100%]"
-              animate={{
-                backgroundPosition: ["0% 50%", "200% 50%", "0% 50%"],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-            >
+            <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Profil & Pendidikan
-            </motion.span>
+            </span>
           </motion.h2>
           
           <motion.div
             variants={fadeInUpVariants}
-            className="h-1 w-24 mx-auto bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full"
-            initial={{ width: 0 }}
-            animate={isSectionInView ? { width: 96 } : { width: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
+            className="h-0.5 w-20 mx-auto bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full"
           />
         </motion.div>
 
-        {/* Main Content dengan animasi grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* About Me Section */}
           <motion.div
             ref={aboutRef}
             initial="hidden"
             animate={isAboutInView ? "visible" : "hidden"}
             variants={staggerContainerVariants}
-            className="space-y-8"
+            className="space-y-6"
           >
-            {/* Header dengan animasi */}
+            {/* Header */}
             <motion.div
               variants={fadeInLeftVariants}
-              className="flex items-center gap-4 mb-6 cursor-default"
+              className="flex items-center gap-3 mb-4"
             >
-              <motion.div
-                className="p-3 bg-gradient-to-br from-cyan-500/20 to-cyan-500/10 rounded-xl"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
-              >
-                <FaUser className="w-7 h-7 text-cyan-400" />
-              </motion.div>
-              <motion.h3 
-                className="text-2xl md:text-3xl font-bold text-white"
-                variants={textRevealVariants}
-                custom={0}
-              >
+              <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-cyan-500/10 rounded-lg">
+                <FaUser className="w-5 h-5 text-cyan-400" />
+              </div>
+              <motion.h3 className="text-xl md:text-2xl font-bold text-white">
                 Tentang Saya
               </motion.h3>
             </motion.div>
             
-            {/* Card Tentang Saya dengan animasi */}
-            <motion.div
-              variants={fadeInLeftVariants}
-              whileHover="hover"
-              whileTap="tap"
-              variants={cardHoverVariants}
-            >
-              <button 
-                className="w-full border border-gray-800/50 bg-gradient-to-br from-gray-900/80 to-gray-900/40 backdrop-blur-sm rounded-2xl p-8 hover:border-cyan-500/50 hover:bg-gradient-to-br hover:from-cyan-900/10 hover:to-gray-900/40 transition-all duration-300 text-left group relative overflow-hidden"
-                aria-label="Buka detail lengkap tentang saya"
-              >
-                {/* Animated background effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0"
-                  initial={{ x: "-100%" }}
-                  whileHover={{ x: "100%" }}
-                  transition={{ duration: 0.8 }}
-                />
-                
-                <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="flex-1">
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={isAboutInView ? { opacity: 1 } : { opacity: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="text-gray-300 leading-relaxed mb-4 group-hover:text-gray-200 transition-colors duration-300 text-base md:text-lg"
-                      >
-                        Saya adalah lulusan Sarjana Terapan Teknik Informatika dari Universitas Harkat Negeri Tegal dengan minat besar di bidang pengembangan web. Selama masa studi, saya telah menguasai berbagai teknologi dan framework seperti React.js, Next.js, dan Laravel, serta memiliki pengalaman dalam mengembangkan berbagai proyek berbasis website.
-                      </motion.p>
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={isAboutInView ? { opacity: 1 } : { opacity: 0 }}
-                        transition={{ delay: 0.6 }}
-                        className="text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300 text-base md:text-lg"
-                      >
-                        Saya bersemangat untuk terus belajar dan berkontribusi dalam menciptakan solusi digital yang inovatif dan bermanfaat.
-                      </motion.p>
-                    </div>
-                    <motion.div
-                      className="ml-6 p-3 bg-gradient-to-br from-cyan-500/20 to-cyan-500/10 rounded-xl"
-                      whileHover={{ 
-                        scale: 1.1,
-                        rotate: 360 
-                      }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <FaUser className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors duration-300" />
-                    </motion.div>
-                  </div>
-                  
-                  {/* Animated border bottom */}
-                  <motion.div
-                    className="h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-purple-500/0 rounded-full mt-4"
-                    initial={{ width: "0%" }}
-                    animate={isAboutInView ? { width: "100%" } : { width: "0%" }}
-                    transition={{ delay: 0.8, duration: 1 }}
-                  />
-                </div>
-              </button>
-            </motion.div>
+            <AboutCard 
+              isInView={isAboutInView}
+              onHoverStart={handleHoverStart}
+              onHoverEnd={handleHoverEnd}
+            />
           </motion.div>
 
           {/* Education Section */}
@@ -331,209 +307,47 @@ export default function About() {
             initial="hidden"
             animate={isEducationInView ? "visible" : "hidden"}
             variants={staggerContainerVariants}
-            className="space-y-8"
+            className="space-y-6"
           >
-            {/* Header dengan animasi */}
+            {/* Header */}
             <motion.div
               variants={fadeInRightVariants}
-              className="flex items-center gap-4 mb-6 cursor-default"
+              className="flex items-center gap-3 mb-4"
             >
-              <motion.div
-                className="p-3 bg-gradient-to-br from-purple-500/20 to-purple-500/10 rounded-xl"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
-              >
-                <FaGraduationCap className="w-7 h-7 text-purple-400" />
-              </motion.div>
-              <motion.h3 
-                className="text-2xl md:text-3xl font-bold text-white"
-                variants={textRevealVariants}
-                custom={0}
-              >
+              <div className="p-2 bg-gradient-to-br from-purple-500/20 to-purple-500/10 rounded-lg">
+                <FaGraduationCap className="w-5 h-5 text-purple-400" />
+              </div>
+              <motion.h3 className="text-xl md:text-2xl font-bold text-white">
                 Pendidikan
               </motion.h3>
             </motion.div>
 
-            {/* Education Timeline dengan animasi stagger */}
-            <motion.div
-              ref={timelineRef}
-              variants={staggerContainerVariants}
-              className="space-y-8"
-            >
-              {/* Higher Education dengan animasi */}
-              <motion.div
-                variants={fadeInRightVariants}
-                whileHover="hover"
-                whileTap="tap"
-                variants={cardHoverVariants}
-                custom={0}
-              >
-                <button 
-                  className="w-full border border-gray-800/50 bg-gradient-to-br from-gray-900/80 to-gray-900/40 backdrop-blur-sm rounded-2xl p-8 hover:border-purple-500/50 hover:bg-gradient-to-br hover:from-purple-900/10 hover:to-gray-900/40 transition-all duration-300 text-left group relative overflow-hidden"
-                  aria-label="Detail pendidikan tinggi"
-                >
-                  {/* Animated background effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0"
-                    initial={{ x: "-100%" }}
-                    whileHover={{ x: "100%" }}
-                    transition={{ duration: 0.8 }}
-                  />
-                  
-                  <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-4">
-                      <motion.h4
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={isEducationInView ? { opacity: 1, x: 0 } : {}}
-                        transition={{ delay: 0.3 }}
-                        className="text-lg md:text-xl font-semibold text-white group-hover:text-purple-300 transition-colors duration-300"
-                      >
-                        Universitas Harkat Negeri
-                      </motion.h4>
-                      <motion.span
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={isEducationInView ? { opacity: 1, scale: 1 } : {}}
-                        transition={{ delay: 0.4 }}
-                        className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-purple-500/10 text-purple-300 rounded-full text-sm font-medium group-hover:bg-gradient-to-r group-hover:from-purple-500/30 group-hover:to-purple-500/20 group-hover:text-purple-200 transition-all duration-300"
-                      >
-                        2021 - 2025
-                      </motion.span>
-                    </div>
-                    
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={isEducationInView ? { opacity: 1 } : {}}
-                      transition={{ delay: 0.5 }}
-                      className="text-cyan-300 font-medium mb-3 group-hover:text-cyan-400 transition-colors duration-300 text-base md:text-lg"
-                    >
-                      Sarjana Terapan Teknik Informatika
-                    </motion.p>
-                    
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={isEducationInView ? { opacity: 1 } : {}}
-                      transition={{ delay: 0.6 }}
-                      className="text-gray-400 mb-4 group-hover:text-gray-300 text-base"
-                    >
-                      IPK: 3.5
-                    </motion.p>
-                    
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={isEducationInView ? { opacity: 1 } : {}}
-                      transition={{ delay: 0.7 }}
-                      className="text-gray-300 text-sm md:text-base group-hover:text-gray-200 transition-colors duration-300"
-                    >
-                      Lulusan dengan spesialisasi dalam pengembangan web fullstack menggunakan React.js, Next.js, dan Laravel.
-                    </motion.p>
-                    
-                    {/* Animated border bottom */}
-                    <motion.div
-                      className="h-1 bg-gradient-to-r from-purple-500/0 via-purple-500 to-purple-500/0 rounded-full mt-4"
-                      initial={{ width: "0%" }}
-                      animate={isEducationInView ? { width: "100%" } : { width: "0%" }}
-                      transition={{ delay: 0.8, duration: 1 }}
-                    />
-                  </div>
-                </button>
-              </motion.div>
+            {/* Education Timeline */}
+            <div className="space-y-4">
+              <EducationCard
+                school="Universitas Harkat Negeri"
+                period="2021 - 2025"
+                degree="Sarjana Terapan Teknik Informatika"
+                gpa="3.5"
+                description="Lulusan dengan spesialisasi dalam pengembangan web fullstack menggunakan React.js, Next.js, dan Laravel."
+                color="purple"
+                isInView={isEducationInView}
+                index={0}
+              />
 
-              {/* High School dengan animasi */}
-              <motion.div
-                variants={fadeInRightVariants}
-                whileHover="hover"
-                whileTap="tap"
-                variants={cardHoverVariants}
-                custom={1}
-              >
-                <button 
-                  className="w-full border border-gray-800/50 bg-gradient-to-br from-gray-900/80 to-gray-900/40 backdrop-blur-sm rounded-2xl p-8 hover:border-cyan-500/50 hover:bg-gradient-to-br hover:from-cyan-900/10 hover:to-gray-900/40 transition-all duration-300 text-left group relative overflow-hidden"
-                  aria-label="Detail pendidikan menengah"
-                >
-                  {/* Animated background effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0"
-                    initial={{ x: "-100%" }}
-                    whileHover={{ x: "100%" }}
-                    transition={{ duration: 0.8 }}
-                  />
-                  
-                  <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-4">
-                      <motion.h4
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={isEducationInView ? { opacity: 1, x: 0 } : {}}
-                        transition={{ delay: 0.5 }}
-                        className="text-lg md:text-xl font-semibold text-white group-hover:text-cyan-300 transition-colors duration-300"
-                      >
-                        Madrasah Aliyah Negeri 1 Brebes
-                      </motion.h4>
-                      <motion.span
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={isEducationInView ? { opacity: 1, scale: 1 } : {}}
-                        transition={{ delay: 0.6 }}
-                        className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-cyan-500/10 text-cyan-300 rounded-full text-sm font-medium group-hover:bg-gradient-to-r group-hover:from-cyan-500/30 group-hover:to-cyan-500/20 group-hover:text-cyan-200 transition-all duration-300"
-                      >
-                        2018 - 2021
-                      </motion.span>
-                    </div>
-                    
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={isEducationInView ? { opacity: 1 } : {}}
-                      transition={{ delay: 0.7 }}
-                      className="text-cyan-300 font-medium mb-3 group-hover:text-cyan-400 transition-colors duration-300 text-base md:text-lg"
-                    >
-                      Ilmu Pengetahuan Alam
-                    </motion.p>
-                    
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={isEducationInView ? { opacity: 1 } : {}}
-                      transition={{ delay: 0.8 }}
-                      className="text-gray-300 text-sm md:text-base group-hover:text-gray-200 transition-colors duration-300"
-                    >
-                      Jurusan IPA dengan fokus pada matematika dan sains, membangun fondasi untuk studi di bidang teknologi informasi.
-                    </motion.p>
-                    
-                    {/* Animated border bottom */}
-                    <motion.div
-                      className="h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 rounded-full mt-4"
-                      initial={{ width: "0%" }}
-                      animate={isEducationInView ? { width: "100%" } : { width: "0%" }}
-                      transition={{ delay: 0.9, duration: 1 }}
-                    />
-                  </div>
-                </button>
-              </motion.div>
-            </motion.div>
+              <EducationCard
+                school="Madrasah Aliyah Negeri 1 Brebes"
+                period="2018 - 2021"
+                degree="Ilmu Pengetahuan Alam"
+                description="Jurusan IPA dengan fokus pada matematika dan sains, membangun fondasi untuk studi di bidang teknologi informasi."
+                color="cyan"
+                isInView={isEducationInView}
+                index={1}
+              />
+            </div>
           </motion.div>
         </div>
       </div>
-
-      {/* Animated connection line between sections (desktop only) */}
-      <motion.div
-        className="hidden lg:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-1 w-full max-w-4xl"
-        initial={{ opacity: 0 }}
-        animate={isSectionInView ? { opacity: 0.3 } : { opacity: 0 }}
-        transition={{ delay: 1 }}
-      >
-        <motion.div
-          className="h-full bg-gradient-to-r from-cyan-500/0 via-cyan-500/50 to-purple-500/0"
-          animate={{
-            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-          style={{
-            background: "linear-gradient(90deg, rgba(6,182,212,0) 0%, rgba(6,182,212,0.5) 50%, rgba(168,85,247,0) 100%)",
-            backgroundSize: "200% 100%",
-          }}
-        />
-      </motion.div>
     </section>
   );
 }
