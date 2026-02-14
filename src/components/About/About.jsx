@@ -29,6 +29,7 @@ export default function About() {
 
   return (
     <section 
+    id="about"
       ref={sectionRef} 
       className="relative bg-black overflow-hidden py-12 md:py-16 lg:py-20"
     >

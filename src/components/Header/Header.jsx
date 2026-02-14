@@ -5,7 +5,7 @@ import GooeyNav from "../GooeyNav/GooeyNav";
 const navItems = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
-  { label: "Experience", href: "#experience" },
+  // { label: "Experience", href: "#experience" },
   { label: "Skills", href: "#skills" },
   { label: "Portfolio", href: "#portfolio" },
   { label: "Contact", href: "#contact" },
@@ -38,14 +38,6 @@ export default function Header() {
       <div className="backdrop-blur-lg bg-black/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-lg"></div>
-                <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
-                  MK Portfolio
-                </span>
-              </div>
-            </div>
 
             <nav className="hidden md:block">
               <GooeyNav

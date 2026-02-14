@@ -634,9 +634,8 @@ export default function Hero() {
                       LinkedIn
                     </span>
                   </motion.a>
-
                   <motion.a
-                    href="https://github.com/onesec"
+                    href="https://github.com/0neSec"
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{
